@@ -65,8 +65,8 @@ function score()
 	var t_cnt,f_cnt,cs_cnt,pe;
 
 	// Make the scale and critical item tables
-	var scale_table=make_table("Scale","Scale Description","Raw Score","K Score","T Score","% Answered");
-	var ci_table=make_table("Scale","Scale Description","Question","Answer","Question Text");
+	var scale_table=make_table("因子","Scale Description","原始分","K Score","T Score","% Answered");
+	var ci_table=make_table("因子","Scale Description","Question","Answer","Question Text");
 
 	// Count the number of True, False, and Can't Say answers
 	n=longform?questions.length:371;
