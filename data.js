@@ -1,7 +1,7 @@
 // Test questions
 questions = [
 	// 0 - Description
-	"MMPI - 2 问题",
+	"MMPI - 2 明尼苏达多项人格测验",
 	// 1
 	"我喜欢机械杂志。",
 	// 2
