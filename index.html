@@ -1,52 +1,43 @@
 <html>
-	<!--
-		Copyright 2008 Kevin Timmerman <mmpi2008 [@t] compendiumarcana [d0t] com>
-		Copyright 2017 nucular <github.com/nucular>
-
-		This program is for educational use only.
-
-		This program is free software: you can redistribute it and/or modify
-		it under the terms of the GNU General Public License as published by
-		the Free Software Foundation, either version 3 of the License, or
-		(at your option) any later version.
-
-		This program is distributed in the hope that it will be useful,
-		but WITHOUT ANY WARRANTY; without even the implied warranty of
-		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-		GNU General Public License for more details.
-
-		You should have received a copy of the GNU General Public License
-		along with this program.  If not, see http://www.gnu.org/licenses/.
-	-->
 	<head>
-		<title>MMPI-2 明尼苏达多项人格测验 -JuneOver24</title>
-	</head>
-	<body>
-		<script type="text/javascript" src="./data.js"></script>
-		<script type="text/javascript" src="./script.js"></script>
+		<title>MMPI-2 明尼苏达多项人格测验 - JuneOver24</title>
+php
+Copy code
+	<!-- Meta Tags -->
+	<meta charset="UTF-8">
+	<meta name="description" content="MMPI-2 明尼苏达多项人格测验">
+	<meta name="keywords" content="MMPI-2, 明尼苏达多项人格测验, 人格测验">
+	<meta name="author" content="Kevin Timmerman and nucular">
 
-		<form name="config" action="#">
-			<p>
-				<input type="radio" name="gender" value="M" onclick="set_gender(0);" checked>我是男性&nbsp;
-				<input type="radio" name="gender" value="F" onclick="set_gender(1);">我是女性<br>
+	<!-- Stylesheet -->
+	<link rel="stylesheet" href="./style.css">
 
-				<input type="radio" name="testform" value="L" onclick="use_long_form(true);" checked>长测试&nbsp;
-				<input type="radio" name="testform" value="S" onclick="use_long_form(false);">短测试<br>
+	<!-- Scripts -->
+	<script type="text/javascript" src="./data.js"></script>
+	<script type="text/javascript" src="./script.js"></script>
+</head>
 
-			</p>
-		</form>
+<body>
+	<!-- Configuration Form -->
+	<form name="config" action="#">
+		<p>
+			<input type="radio" name="gender" value="M" onclick="set_gender(0);" checked>我是男性&nbsp;
+			<input type="radio" name="gender" value="F" onclick="set_gender(1);">我是女性<br>
 
-		<h1>
-			<script type="text/javascript">document.write(questions[0]);</script>
-		</h1>
+			<input type="radio" name="testform" value="L" onclick="use_long_form(true);" checked>长测试&nbsp;
+			<input type="radio" name="testform" value="S" onclick="use_long_form(false);">短测试<br>
+		</p>
+	</form>
 
-		<form name="questions" action="#">
-			<p>
-				<script type="text/javascript">doc_write_all_questions();</script>
-				<br>
-				<input type="button" value="我已确认我选的无误！开始计算得分" onclick="score_rb(document.forms.questions);">
-				<br><br>
-			</p>
-		</form>
-	</body>
-</html>
+	<!-- Question Form -->
+	<h1 id="question-heading"></h1>
+	<form name="questions" action="#">
+		<p>
+			<div id="questions-container"></div>
+			<br>
+			<input type="button" value="我已确认我选的无误！开始计算得分" onclick="score_rb(document.forms.questions);">
+			<br><br>
+		</p>
+	</form>
+</body>
+</html> 
