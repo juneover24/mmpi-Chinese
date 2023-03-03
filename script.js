@@ -65,7 +65,7 @@ function score()
 	var t_cnt,f_cnt,cs_cnt,pe;
 
 	// Make the scale and critical item tables
-	var scale_table=make_table("因子","Scale Description","原始分","K Score","T Score","% Answered");
+	var scale_table=make_table("因子","Scale Description","原始分","K(校正)原始分-K Score","T Score","% Answered");
 	var ci_table=make_table("因子","Scale Description","Question","Answer","Question Text");
 
 	// Count the number of True, False, and Can't Say answers
