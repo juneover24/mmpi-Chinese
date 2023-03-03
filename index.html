@@ -1,33 +1,126 @@
 <html>
-	<head>
-		<title>MMPI-2 明尼苏达多项人格测验 -JuneOver24</title>
-	</head>
-	<body>
-		<script type="text/javascript" src="./data.js"></script>
-		<script type="text/javascript" src="./script.js"></script>
+  <script src="./html2canvas.min.js"></script>
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.min.js"></script> -->
+  <script src="./jspdf.min.js"></script>
+  <script src="https://cdn.bootcss.com/html2canvas/0.5.0-beta4/html2canvas.js"></script>
+    <script src="https://cdn.bootcss.com/jspdf/1.3.4/jspdf.debug.js"></script>
+	<script src="./jquery-3.6.3.min.js"></script>
+  <head>
+    <title>MMPI-2 明尼苏达多项人格测验 -JuneOver24</title>
+  </head>
+  <body>
+    <script type="text/javascript" src="./data.js"></script>
+    <script type="text/javascript" src="./script.js"></script>
 
-		<form name="config" action="#">
-			<p>
-				<input type="radio" name="gender" value="M" onclick="set_gender(0);" checked>我是男性&nbsp;
-				<input type="radio" name="gender" value="F" onclick="set_gender(1);">我是女性<br>
+    <form name="config" action="#">
+      <p>
+        <input
+          type="radio"
+          name="gender"
+          value="M"
+          onclick="set_gender(0);"
+          checked
+        />我是男性&nbsp;
+        <input
+          type="radio"
+          name="gender"
+          value="F"
+          onclick="set_gender(1);"
+        />我是女性<br />
 
-				<input type="radio" name="testform" value="L" onclick="use_long_form(true);" checked>长测试&nbsp;
-				<input type="radio" name="testform" value="S" onclick="use_long_form(false);">短测试<br>
+        <input
+          type="radio"
+          name="testform"
+          value="L"
+          onclick="use_long_form(true);"
+          checked
+        />长测试&nbsp;
+        <input
+          type="radio"
+          name="testform"
+          value="S"
+          onclick="use_long_form(false);"
+        />短测试<br />
+      </p>
+    </form>
 
-			</p>
-		</form>
+    <h1>
+      <script type="text/javascript">
+        document.write(questions[0]);
+      </script>
+    </h1>
 
-		<h1>
-			<script type="text/javascript">document.write(questions[0]);</script>
-		</h1>
+    <form name="questions" action="#">
+      <p>
+        <script type="text/javascript">
+          doc_write_all_questions();
+        </script>
+        <br />
+        <input
+          type="button"
+          value="我已确认我选的无误！开始计算得分"
+          onclick="score_rb(document.forms.questions);"
+        />
+        <br /><br />
+      </p>
+    </form>
+  </body>
+  <button onclick="makeMpdf()">导出PDF</button>
 
-		<form name="questions" action="#">
-			<p>
-				<script type="text/javascript">doc_write_all_questions();</script>
-				<br>
-				<input type="button" value="我已确认我选的无误！开始计算得分" onclick="score_rb(document.forms.questions);">
-				<br><br>
-			</p>
-		</form>
-	</body>
+  <script>
+      //将html页面导出.pdf格式文件(适用于jQuery、vue库)  -- xzz 2018/04/24
+      function makeMpdf(pdfName) {
+        if (confirm("您确认下载该PDF文件吗?")) {
+			var target = document.body;
+      target.style.background = "#FFFFFF";
+      if (pdfName == "11111.pdf" )
+        pdfName = getNowFormatDate();
+
+          html2canvas(target, {
+            onrendered: function (canvas) {
+              var contentWidth = canvas.width;
+              var contentHeight = canvas.height;
+
+              //一页pdf显示html页面生成的canvas高度;
+              var pageHeight = (contentWidth / 592.28) * 841.89;
+              //未生成pdf的html页面高度
+              var leftHeight = contentHeight;
+              //页面偏移
+              var position = 0;
+              //a4纸的尺寸[595.28,841.89]，html页面生成的canvas在pdf中图片的宽高
+              var imgWidth = 595.28;
+              var imgHeight = (592.28 / contentWidth) * contentHeight;
+
+              var pageData = canvas.toDataURL("image/jpeg", 1.0);
+
+              var pdf = new jsPDF("", "pt", "a4");
+
+              //有两个高度需要区分，一个是html页面的实际高度，和生成pdf的页面高度(841.89)
+              //当内容未超过pdf一页显示的范围，无需分页
+              if (leftHeight < pageHeight) {
+                pdf.addImage(pageData, "JPEG", 0, 0, imgWidth, imgHeight);
+              } else {
+                while (leftHeight > 0) {
+                  pdf.addImage(
+                    pageData,
+                    "JPEG",
+                    0,
+                    position,
+                    imgWidth,
+                    imgHeight
+                  );
+                  leftHeight -= pageHeight;
+                  position -= 841.89;
+                  //避免添加空白页
+                  if (leftHeight > 0) {
+                    pdf.addPage();
+                  }
+                }
+              }
+              pdf.save(pdfName + ".pdf");
+            },
+          });
+        }
+      };
+  </script>
 </html>

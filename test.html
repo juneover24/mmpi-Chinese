@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script> -->
+  <script src="./html2canvas.min.js"></script>
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.min.js"></script> -->
+  <script src="./jspdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  
+  <head>
+    <title>HTML to PDF Example</title>
+  </head>
+  <body>
+    <h1>Hello, World!</h1>
+    <p>This is an example of how to convert HTML to PDF using javascript.</p>
+    <button onclick="generatePDF()">导出PD1F</button>
+
+    <script>
+   function generatePDF() {
+ // 创建一个新的 jsPDF 对象
+ var doc = new jsPDF();
+
+// 从 HTML 元素创建 PDF
+html2pdf().from(document.body).set({ margin: [0.5, 0.5, 0.5, 0.5] }).save();
+
+// 将 PDF 文件保存到本地计算机
+doc.save("file.pdf");
+
+      }
+    </script>
+    
+  </body>
+</html>
