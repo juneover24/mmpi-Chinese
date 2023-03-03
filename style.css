@@ -1,0 +1,9 @@
+@font-face {
+    font-family: 'myFont';
+    src: url('./foot.ttf');
+  }
+  
+  body {
+    font-family: 'myFont', sans-serif;
+  }
+  

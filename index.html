@@ -7,6 +7,7 @@
 	<script src="./jquery-3.6.3.min.js"></script>
   <head>
     <title>MMPI-2 明尼苏达多项人格测验 -JuneOver24</title>
+	<link rel="stylesheet" href="./style.css">
   </head>
   <body>
     <script type="text/javascript" src="./data.js"></script>
@@ -45,12 +46,14 @@
     </form>
 
     <h1>
+		<link rel="stylesheet" href="./style.css">
       <script type="text/javascript">
         document.write(questions[0]);
       </script>
     </h1>
 
     <form name="questions" action="#">
+		
       <p>
         <script type="text/javascript">
           doc_write_all_questions();
@@ -65,7 +68,7 @@
       </p>
     </form>
   </body>
-  <button onclick="makeMpdf()">将结果导出为PDF</button>
+  <button onclick="makeMpdf()">导出PDF</button>
 
   <script>
       //将html页面导出.pdf格式文件(适用于jQuery、vue库)  -- xzz 2018/04/24
