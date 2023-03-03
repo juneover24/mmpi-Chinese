@@ -1,6 +1,6 @@
 @font-face {
     font-family: 'myFont';
-    src: url('https://24shop-1256063041.cos.ap-chengdu.myqcloud.com/foot.ttf');
+    src: url('./foot.ttf');
   }
   
   body {
