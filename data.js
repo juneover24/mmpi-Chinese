@@ -1,7 +1,7 @@
 // Test questions
 questions = [
 	// 0 - Description
-	"MMPI - 2 明尼苏达多项人格测验",
+	"MMPI - 2 明尼苏达多项人格测验(注：请不要在微信内测试，微信测试将无法导出pdf文件！！！！)",
 	// 1
 	"我喜欢机械杂志。",
 	// 2
