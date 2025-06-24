@@ -200,17 +200,17 @@ function handleAutoScroll(radioButton) {
       console.log("滚动到下一个问题：", nextQuestion.id);
       nextQuestion.scrollIntoView({behavior: 'smooth', block: 'center'});
     }, 300);
-  } else {
+      } else {
     // 如果是当前页的最后一个问题，检查是否要自动翻页
-    if (currentPage < totalPages) {
-      setTimeout(function() {
+      if (currentPage < totalPages) {
+        setTimeout(function() {
         console.log("已到达当前页最后一个问题，准备翻页");
-        var nextButton = document.querySelector('.next-button');
+          var nextButton = document.querySelector('.next-button');
         if (nextButton && !nextButton.disabled) {
           console.log("自动翻到下一页");
           nextButton.click();
         }
-      }, 500);
+        }, 500);
     } else {
       console.log("已到达最后一页的最后一个问题");
     }
@@ -303,11 +303,11 @@ function doc_write_all_questions() {
       for (var j = 0; j < scales[re_index][1].length; ++j) {
         var q = scales[re_index][1][j];
         if (questions[q]) {
-          re_questions.push({
-            num: q,
+        re_questions.push({
+          num: q,
             text: questions[q],
             is_true_question: true
-          });
+        });
           console.log("添加True题目：", q, questions[q]);
         } else {
           console.error("找不到题目文本：", q);
@@ -318,11 +318,11 @@ function doc_write_all_questions() {
       for (var j = 0; j < scales[re_index][2].length; ++j) {
         var q = scales[re_index][2][j];
         if (questions[q]) {
-          re_questions.push({
-            num: q,
+        re_questions.push({
+          num: q,
             text: questions[q],
             is_true_question: false
-          });
+        });
           console.log("添加False题目：", q, questions[q]);
         } else {
           console.error("找不到题目文本：", q);
@@ -1657,7 +1657,7 @@ function checkIncompleteQuestions() {
       updatePagination();
       
       // 延迟执行，确保分页完成后再滚动
-      setTimeout(function() {
+        setTimeout(function() {
         // 找到页面上第一个未完成的问题并滚动到它
         var firstVisibleIncomplete = incompleteQuestions.find(function(q) {
           return q.element.style.display !== 'none';
@@ -1676,7 +1676,7 @@ function checkIncompleteQuestions() {
         } else {
           console.error("无法找到可见的未完成问题");
         }
-      }, 500);
+        }, 500);
     }
   } else {
     alert('恭喜！您已完成所有问题。');
@@ -2128,7 +2128,7 @@ function exportTestResults() {
             kScore = k * tscale[0] + rawScore;
             kScore = Math.floor(kScore + 0.5);
             tScore = tscale[kScore + 1];
-          } else {
+    } else {
             kScore = undefined;
             tScore = tscale[rawScore + 1];
           }

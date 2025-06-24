@@ -41,37 +41,37 @@
           <div class="config-options step-options">
             <label class="config-option step-option">
               <input type="radio" name="gender" value="M" onclick="selectGender(0);" />
-              <span>男性</span>
-            </label>
+                  <span>男性</span>
+                </label>
             <label class="config-option step-option">
               <input type="radio" name="gender" value="F" onclick="selectGender(1);" />
-              <span>女性</span>
-            </label>
-          </div>
-        </div>
-        
+                  <span>女性</span>
+                </label>
+              </div>
+            </div>
+
         <!-- 步骤2：测试类型选择 -->
         <div class="step-content" id="step-2" style="display: none;">
           <h2>选择测试类型</h2>
           <div class="config-options step-options">
             <label class="config-option step-option">
               <input type="radio" name="testform" value="L" onclick="selectTestType('long');" />
-              <span>完整测试</span>
-              <small>(包含所有问题，结果更准确)</small>
-            </label>
+                  <span>完整测试</span>
+                  <small>(包含所有问题，结果更准确)</small>
+                </label>
             <label class="config-option step-option">
               <input type="radio" name="testform" value="S" onclick="selectTestType('short');" />
-              <span>简短测试</span>
-              <small>(只包含前370个问题)</small>
-            </label>
+                  <span>简短测试</span>
+                  <small>(只包含前370个问题)</small>
+                </label>
             <label class="config-option step-option">
               <input type="radio" name="testform" value="RE" onclick="selectTestType('re');" />
-              <span>社会责任感测试</span>
-              <small>(仅RE量表)</small>
-            </label>
+                  <span>社会责任感测试</span>
+                  <small>(仅RE量表)</small>
+                </label>
+            </div>
           </div>
-        </div>
-        
+          
         <!-- 步骤3：测试说明 -->
         <div class="step-content" id="step-3" style="display: none;">
           <h2>测试说明</h2>
@@ -212,9 +212,9 @@
         if (typeof questions === 'undefined' || typeof scales === 'undefined') {
           console.error("测试数据未正确加载");
           alert("测试数据未正确加载，请刷新页面重试。如果问题持续存在，请联系管理员。");
-          return;
-        }
-        
+                      return;
+                    }
+                    
         // 初始化ans数组
         var maxQuestions = 600; // 足够大的数组以容纳所有可能的问题
         window.ans = new Array(maxQuestions).fill(undefined);
