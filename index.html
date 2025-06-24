@@ -3,8 +3,9 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MMPI-2 明尼苏达多项人格测验 -JuneOver24</title>
+    <title>MMPI-2 明尼苏达多项人格测验</title>
     <link rel="stylesheet" href="./style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="./jquery-3.6.3.min.js"></script>
     <script src="./html2canvas.min.js"></script>
     <script src="./jspdf.min.js"></script>
@@ -14,350 +15,210 @@
   <body>
     <div class="container">
       <h1 id="test-title">MMPI-2 明尼苏达多项人格测验</h1>
+      <p class="subtitle">探索您的性格特质，了解自己的心理状态</p>
 
-      <!-- 优化的配置面板 -->
+      <!-- 分步骤配置面板 -->
       <div class="config-panel">
-        <h2>测试配置</h2>
-        <form name="config" action="#" class="config-form">
-          <div class="config-section">
-            <div class="config-group">
-              <h3>性别</h3>
-              <div class="config-options">
-                <label class="config-option">
-                  <input type="radio" name="gender" value="M" onclick="set_gender(0);" checked />
-                  <span>男性</span>
-                </label>
-                <label class="config-option">
-                  <input type="radio" name="gender" value="F" onclick="set_gender(1);" />
-                  <span>女性</span>
-                </label>
-              </div>
-            </div>
-
-            <div class="config-group">
-              <h3>测试类型</h3>
-              <div class="config-options">
-                <label class="config-option">
-                  <input type="radio" name="testform" value="L" onclick="use_long_form(true); reloadQuestions();" checked />
-                  <span>完整测试</span>
-                  <small>(包含所有问题，结果更准确)</small>
-                </label>
-                <label class="config-option">
-                  <input type="radio" name="testform" value="S" onclick="use_long_form(false); reloadQuestions();" />
-                  <span>简短测试</span>
-                  <small>(只包含前370个问题)</small>
-                </label>
-                <label class="config-option">
-                  <input type="radio" name="testform" value="RE" onclick="use_re_scale(); reloadQuestions();" />
-                  <span>社会责任感测试</span>
-                  <small>(仅RE量表)</small>
-                </label>
-              </div>
-            </div>
+        <!-- 步骤指示器 -->
+        <div class="step-indicator">
+          <div class="step active" data-step="1">
+            <div class="step-number">1</div>
+            <div class="step-text">性别</div>
           </div>
-          
+          <div class="step" data-step="2">
+            <div class="step-number">2</div>
+            <div class="step-text">测试类型</div>
+          </div>
+          <div class="step" data-step="3">
+            <div class="step-number">3</div>
+            <div class="step-text">开始测试</div>
+          </div>
+        </div>
+        
+        <!-- 步骤1：性别选择 -->
+        <div class="step-content" id="step-1">
+          <h2>选择您的性别</h2>
+          <div class="config-options step-options">
+            <label class="config-option step-option">
+              <input type="radio" name="gender" value="M" onclick="selectGender(0);" />
+              <span>男性</span>
+            </label>
+            <label class="config-option step-option">
+              <input type="radio" name="gender" value="F" onclick="selectGender(1);" />
+              <span>女性</span>
+            </label>
+          </div>
+        </div>
+        
+        <!-- 步骤2：测试类型选择 -->
+        <div class="step-content" id="step-2" style="display: none;">
+          <h2>选择测试类型</h2>
+          <div class="config-options step-options">
+            <label class="config-option step-option">
+              <input type="radio" name="testform" value="L" onclick="selectTestType('long');" />
+              <span>完整测试</span>
+              <small>(包含所有问题，结果更准确)</small>
+            </label>
+            <label class="config-option step-option">
+              <input type="radio" name="testform" value="S" onclick="selectTestType('short');" />
+              <span>简短测试</span>
+              <small>(只包含前370个问题)</small>
+            </label>
+            <label class="config-option step-option">
+              <input type="radio" name="testform" value="RE" onclick="selectTestType('re');" />
+              <span>社会责任感测试</span>
+              <small>(仅RE量表)</small>
+            </label>
+          </div>
+        </div>
+        
+        <!-- 步骤3：测试说明 -->
+        <div class="step-content" id="step-3" style="display: none;">
+          <h2>测试说明</h2>
           <div class="test-instructions">
-            <h3>测试说明</h3>
-            <p>本测验包含多个问题，请根据您的真实情况回答。回答没有对错之分，请选择最符合您自身情况的选项。</p>
-            <p>每个问题有三个选项：</p>
+            <p>本测验将一次只显示一道题目，请根据您的真实情况回答。回答没有对错之分，请选择最符合您自身情况的选项。</p>
+            <p>每道题目有三个选项：</p>
             <ul>
               <li><strong>是</strong> - 表示同意或符合描述</li>
               <li><strong>否</strong> - 表示不同意或不符合描述</li>
               <li><strong>无法确定</strong> - 表示无法判断</li>
             </ul>
-            <p>测试完成后，系统将自动生成测试报告。您可以将报告导出为PDF文件。</p>
+            <p>当您选择答案后，系统会自动跳转到下一题。您也可以使用导航按钮手动切换题目。</p>
+            <p>测试完成后，系统将自动生成测试报告。</p>
+            
+            <div class="selected-options">
+              <p>您选择的配置：</p>
+              <p id="selected-gender">性别：未选择</p>
+              <p id="selected-test-type">测试类型：未选择</p>
+            </div>
           </div>
           
           <div class="start-button-container">
             <button type="button" onclick="startTest();" class="start-button">开始测试</button>
           </div>
-        </form>
+        </div>
+        
+        <!-- 步骤导航按钮 -->
+        <div class="step-navigation">
+          <button type="button" id="prev-step" onclick="navigateStep(-1);" style="display: none;">上一步</button>
+          <button type="button" id="next-step" onclick="navigateStep(1);" disabled>下一步</button>
+        </div>
       </div>
 
+      <!-- 问题容器 -->
       <div id="questions-container" style="display: none;">
         <form name="questions" action="#" onsubmit="return false;">
           <div id="questions-content">
             <!-- 问题内容将由JavaScript动态生成 -->
           </div>
-          <!-- 按钮会由JavaScript动态添加 -->
         </form>
       </div>
 
-      <!-- 添加结果显示区域 -->
+      <!-- 结果容器 -->
       <div id="results-container" style="display: none;">
         <h2>测试结果</h2>
         <div id="results-content"></div>
       </div>
+
+      <!-- 页脚 -->
+      <div class="footer">
+        <p>© 2024 MMPI在线测试系统 | 由 <a href="#">JuneOver24</a> 强力驱动</p>
+      </div>
     </div>
 
-    <script>
-      //将html页面导出.pdf格式文件(适用于jQuery、vue库)  -- xzz 2018/04/24
-      function makeMpdf(pdfName) {
-        if (confirm("您确认下载该PDF文件吗?")) {
-          try {
-            var target = document.body;
-            var originalBgColor = target.style.background;
-            
-            // 保存当前页面滚动位置
-            var scrollPos = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-            
-            // 临时修改样式以优化PDF输出
-            target.style.background = "#FFFFFF";
-            
-            if (!pdfName || pdfName == "11111.pdf") {
-              pdfName = getNowFormatDate();
-            }
-  
-            html2canvas(target, {
-              allowTaint: true,
-              useCORS: true,
-              scale: 2, // 提高分辨率
-              onrendered: function (canvas) {
-                try {
-                  var contentWidth = canvas.width;
-                  var contentHeight = canvas.height;
-  
-                  //一页pdf显示html页面生成的canvas高度;
-                  var pageHeight = (contentWidth / 592.28) * 841.89;
-                  //未生成pdf的html页面高度
-                  var leftHeight = contentHeight;
-                  //页面偏移
-                  var position = 0;
-                  //a4纸的尺寸[595.28,841.89]，html页面生成的canvas在pdf中图片的宽高
-                  var imgWidth = 595.28;
-                  var imgHeight = (592.28 / contentWidth) * contentHeight;
-  
-                  var pageData = canvas.toDataURL("image/jpeg", 1.0);
-  
-                  var pdf = new jsPDF("", "pt", "a4");
-  
-                  //有两个高度需要区分，一个是html页面的实际高度，和生成pdf的页面高度(841.89)
-                  //当内容未超过pdf一页显示的范围，无需分页
-                  if (leftHeight < pageHeight) {
-                    pdf.addImage(pageData, "JPEG", 0, 0, imgWidth, imgHeight);
-                  } else {
-                    while (leftHeight > 0) {
-                      pdf.addImage(
-                        pageData,
-                        "JPEG",
-                        0,
-                        position,
-                        imgWidth,
-                        imgHeight
-                      );
-                      leftHeight -= pageHeight;
-                      position -= 841.89;
-                      //避免添加空白页
-                      if (leftHeight > 0) {
-                        pdf.addPage();
-                      }
-                    }
-                  }
-                  
-                  // 添加文件信息
-                  pdf.setProperties({
-                    title: '明尼苏达多项人格测验结果',
-                    subject: 'MMPI-2测试结果',
-                    author: 'JuneOver24',
-                    keywords: 'MMPI, 心理测试, 人格测验',
-                    creator: 'MMPI在线测试系统'
-                  });
-                  
-                  // 保存PDF文件
-                  pdf.save(pdfName + ".pdf");
-                  
-                  // 提示用户
-                  alert("PDF文件已生成，请将此文件发送至gushao@gushao.club获取专业分析结果。");
-                } catch (pdfError) {
-                  console.error("生成PDF时出错：", pdfError);
-                  alert("生成PDF时出错：" + pdfError.message);
-                } finally {
-                  // 恢复原来的背景颜色
-                  target.style.background = originalBgColor;
-                  
-                  // 恢复滚动位置
-                  window.scrollTo(0, scrollPos);
-                }
-              }
-            });
-          } catch (error) {
-            console.error("导出PDF过程中出错：", error);
-            alert("导出PDF时发生错误：" + error.message);
-          }
-        }
-      }
-    </script>
 
     <script>
-      // 优化的PDF导出函数
-      function makeMpdf(pdfName) {
-        if (!confirm("您确认下载该PDF文件吗?")) {
-          return; // 用户取消，立即返回
+      // 当前步骤
+      var currentStep = 1;
+      var selectedGender = null;
+      var selectedTestType = null;
+      
+      // 选择性别
+      function selectGender(gender) {
+        selectedGender = gender;
+        set_gender(gender);
+        document.getElementById('selected-gender').textContent = "性别：" + (gender === 0 ? "男性" : "女性");
+        document.getElementById('next-step').disabled = false;
+      }
+      
+      // 选择测试类型
+      function selectTestType(type) {
+        selectedTestType = type;
+        if (type === 'long') {
+          use_long_form(true);
+        } else if (type === 'short') {
+          use_long_form(false);
+        } else if (type === 're') {
+          use_re_scale();
         }
         
-        // 显示加载指示器
-        var loadingIndicator = document.createElement('div');
-        loadingIndicator.id = 'pdf-loading';
-        loadingIndicator.innerHTML = '<div class="spinner"></div><p>正在生成PDF，请稍候...</p>';
-        loadingIndicator.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:flex; flex-direction:column; justify-content:center; align-items:center; color:#fff; z-index:9999;';
-        document.body.appendChild(loadingIndicator);
-        
-        // 使用setTimeout让浏览器有时间显示加载指示器
-        setTimeout(function() {
-          try {
-            // 只转换结果容器，而不是整个body，提高性能
-            var target = document.getElementById('results-container');
-            if (!target) {
-              throw new Error("找不到结果容器，无法生成PDF");
-            }
-            
-            // 存储原始样式
-            var originalStyles = {
-              background: target.style.background,
-              margin: target.style.margin,
-              padding: target.style.padding,
-              width: target.style.width
-            };
-            
-            // 优化PDF输出的样式
-            target.style.background = "#FFFFFF";
-            target.style.margin = "20px";
-            target.style.padding = "20px";
-            target.style.width = "800px"; // 固定宽度以优化PDF布局
-            
-            // 生成文件名
-            if (!pdfName || pdfName == "11111.pdf") {
-              pdfName = getNowFormatDate();
-            }
-            
-            // 优化canvas设置
-            var canvasOptions = {
-              allowTaint: true,
-              useCORS: true,
-              scale: 2, // 提高分辨率
-              logging: false, // 禁用日志减少控制台输出
-              backgroundColor: '#FFFFFF', // 确保白色背景
-              removeContainer: true, // 删除临时创建的DOM元素
-              imageTimeout: 15000, // 增加图像超时时间
-              onclone: function(clonedDoc) {
-                // 在克隆的文档中优化表格样式
-                var tables = clonedDoc.querySelectorAll('table');
-                tables.forEach(function(table) {
-                  table.style.width = '100%';
-                  table.style.borderCollapse = 'collapse';
-                });
-              }
-            };
-            
-            // 使用Promise进行异步处理
-            html2canvas(target, canvasOptions)
-              .then(function(canvas) {
-                var contentWidth = canvas.width;
-                var contentHeight = canvas.height;
-                
-                // PDF页面设置
-                var pageHeight = (contentWidth / 592.28) * 841.89;
-                var leftHeight = contentHeight;
-                var position = 0;
-                var imgWidth = 595.28;
-                var imgHeight = (592.28 / contentWidth) * contentHeight;
-                
-                // 优化图像质量和大小
-                var pageData = canvas.toDataURL("image/jpeg", 0.92);
-                
-                var pdf = new jsPDF("", "pt", "a4");
-                
-                // 添加文件信息
-                pdf.setProperties({
-                  title: '明尼苏达多项人格测验结果',
-                  subject: 'MMPI-2测试结果',
-                  author: 'JuneOver24',
-                  keywords: 'MMPI, 心理测试, 人格测验',
-                  creator: 'MMPI在线测试系统'
-                });
-                
-                // 生成PDF页面
-                if (leftHeight < pageHeight) {
-                  // 单页
-                  pdf.addImage(pageData, "JPEG", 0, 0, imgWidth, imgHeight);
-                } else {
-                  // 多页，使用批处理避免过多重绘
-                  var pageCount = Math.ceil(leftHeight / pageHeight);
-                  var processPages = function(currentPage) {
-                    if (currentPage >= pageCount) {
-                      // 所有页面处理完毕，保存PDF
-                      pdf.save(pdfName + ".pdf");
-                      
-                      // 移除加载指示器
-                      document.body.removeChild(loadingIndicator);
-                      
-                      // 恢复原始样式
-                      Object.keys(originalStyles).forEach(function(key) {
-                        target.style[key] = originalStyles[key];
-                      });
-                      
-                      // 提示用户
-                      alert("PDF文件已生成，请将此文件发送至gushao@gushao.club获取专业分析结果。");
-                      return;
-                    }
-                    
-                    // 添加当前页面
-                    if (currentPage > 0) {
-                      pdf.addPage();
-                    }
-                    
-                    var currentPosition = position - (currentPage * pageHeight);
-                    pdf.addImage(pageData, "JPEG", 0, currentPosition, imgWidth, imgHeight);
-                    
-                    // 处理下一页
-                    setTimeout(function() {
-                      processPages(currentPage + 1);
-                    }, 0);
-                  };
-                  
-                  // 开始处理页面
-                  processPages(0);
-                  return; // 提前返回，异步处理剩余页面
-                }
-                
-                // 单页情况直接保存
-                pdf.save(pdfName + ".pdf");
-                
-                // 移除加载指示器
-                document.body.removeChild(loadingIndicator);
-                
-                // 恢复原始样式
-                Object.keys(originalStyles).forEach(function(key) {
-                  target.style[key] = originalStyles[key];
-                });
-                
-                // 提示用户
-                alert("PDF文件已生成，请将此文件发送至gushao@gushao.club获取专业分析结果。");
-              })
-              .catch(function(error) {
-                console.error("生成PDF时出错：", error);
-                alert("生成PDF时出错：" + error.message);
-                
-                // 移除加载指示器
-                document.body.removeChild(loadingIndicator);
-                
-                // 恢复原始样式
-                Object.keys(originalStyles).forEach(function(key) {
-                  target.style[key] = originalStyles[key];
-                });
-              });
-          } catch (error) {
-            console.error("导出PDF过程中出错：", error);
-            alert("导出PDF时发生错误：" + error.message);
-            
-            // 移除加载指示器
-            var loadingElement = document.getElementById('pdf-loading');
-            if (loadingElement) {
-              document.body.removeChild(loadingElement);
-            }
-          }
-        }, 100);
+        var typeText = type === 'long' ? "完整测试" : (type === 'short' ? "简短测试" : "社会责任感测试");
+        document.getElementById('selected-test-type').textContent = "测试类型：" + typeText;
+        document.getElementById('next-step').disabled = false;
       }
+      
+      // 导航步骤
+      function navigateStep(direction) {
+        var nextStep = currentStep + direction;
+        
+        // 验证是否可以进入下一步
+        if (direction > 0) {
+          if (currentStep === 1 && selectedGender === null) {
+            alert("请先选择您的性别");
+            return;
+          } else if (currentStep === 2 && selectedTestType === null) {
+            alert("请先选择测试类型");
+            return;
+          }
+        }
+        
+        // 限制步骤范围
+        if (nextStep < 1 || nextStep > 3) return;
+        
+        // 隐藏当前步骤，显示下一步
+        document.getElementById('step-' + currentStep).style.display = 'none';
+        document.getElementById('step-' + nextStep).style.display = 'block';
+        
+        // 更新步骤指示器
+        document.querySelector('.step[data-step="' + currentStep + '"]').classList.remove('active');
+        document.querySelector('.step[data-step="' + nextStep + '"]').classList.add('active');
+        
+        // 更新导航按钮
+        document.getElementById('prev-step').style.display = nextStep > 1 ? 'block' : 'none';
+        document.getElementById('next-step').style.display = nextStep < 3 ? 'block' : 'none';
+        
+        // 如果是最后一步，确保已经选择了所有选项
+        if (nextStep === 3) {
+          document.getElementById('next-step').disabled = (selectedGender === null || selectedTestType === null);
+        } else {
+          // 重置下一步按钮状态
+          if (nextStep === 1) {
+            document.getElementById('next-step').disabled = selectedGender === null;
+          } else if (nextStep === 2) {
+            document.getElementById('next-step').disabled = selectedTestType === null;
+          }
+        }
+        
+        // 更新当前步骤
+        currentStep = nextStep;
+      }
+      
+      // 页面加载后初始化
+      document.addEventListener('DOMContentLoaded', function() {
+        // 初始设置
+        document.getElementById('next-step').disabled = true;
+        
+        // 确保数据加载正确
+        if (typeof questions === 'undefined' || typeof scales === 'undefined') {
+          console.error("测试数据未正确加载");
+          alert("测试数据未正确加载，请刷新页面重试。如果问题持续存在，请联系管理员。");
+          return;
+        }
+        
+        // 初始化ans数组
+        var maxQuestions = 600; // 足够大的数组以容纳所有可能的问题
+        window.ans = new Array(maxQuestions).fill(undefined);
+      });
     </script>
   </body>
 </html>

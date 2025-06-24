@@ -128,6 +128,8 @@ function setupEventDelegation() {
   var questionsContent = cachedDomElements.questionsContent || document.getElementById('questions-content');
   if (!questionsContent) return;
   
+  console.log("设置事件委托...");
+  
   // 使用事件委托处理所有单选按钮的点击
   questionsContent.addEventListener('change', function(e) {
     if (e.target && e.target.type === 'radio') {
@@ -144,11 +146,15 @@ function setupEventDelegation() {
         
         // 更新ans数组
         var questionNumber = parseInt(e.target.name, 10);
+        var answerValue = e.target.value;
+        
+        console.log("用户回答：题号 " + questionNumber + " = " + answerValue);
+        
         // 确保ans数组有足够大小
         while(ans.length <= questionNumber) {
           ans.push(undefined);
         }
-        ans[questionNumber] = e.target.value;
+        ans[questionNumber] = answerValue;
         
         // 处理自动滚动
         handleAutoScroll(e.target);
@@ -167,31 +173,51 @@ function handleAutoScroll(radioButton) {
   var currentQuestion = radioButton.closest('.question-item, .re-question');
   if (!currentQuestion) return;
   
-  // 获取当前问题的下一个问题
-  var nextQuestion = currentQuestion.nextElementSibling;
+  // 获取所有可见问题
+  var questionsContent = cachedDomElements.questionsContent || document.getElementById('questions-content');
+  var visibleQuestions = Array.from(
+    questionsContent.querySelectorAll('.question-item:not([style*="display: none"]), .re-question:not([style*="display: none"])')
+  ).sort(function(a, b) {
+    var idA = parseInt(a.id.substring(1), 10);
+    var idB = parseInt(b.id.substring(1), 10);
+    return idA - idB;
+  });
   
-  // 如果存在下一个问题且是当前页的问题，则滚动到它
-  if (nextQuestion && (nextQuestion.classList.contains('question-item') || nextQuestion.classList.contains('re-question')) && 
-      nextQuestion.style.display !== 'none') {
+  console.log("可见问题数量：", visibleQuestions.length);
+  
+  // 找到当前问题在可见问题中的索引
+  var currentIndex = visibleQuestions.indexOf(currentQuestion);
+  if (currentIndex === -1) return;
+  
+  console.log("当前问题索引：", currentIndex);
+  
+  // 获取下一个问题
+  var nextQuestion = currentIndex < visibleQuestions.length - 1 ? visibleQuestions[currentIndex + 1] : null;
+  
+  // 如果存在下一个问题，滚动到它
+  if (nextQuestion) {
     setTimeout(function() {
+      console.log("滚动到下一个问题：", nextQuestion.id);
       nextQuestion.scrollIntoView({behavior: 'smooth', block: 'center'});
     }, 300);
-      } else {
+  } else {
     // 如果是当前页的最后一个问题，检查是否要自动翻页
-    var visibleQuestions = document.querySelectorAll('#questions-content .question-item:not([style*="display: none"]), #questions-content .re-question:not([style*="display: none"])');
-    if (visibleQuestions.length > 0 && currentQuestion === visibleQuestions[visibleQuestions.length - 1]) {
-      // 如果不是最后一页，则自动翻到下一页
-      if (currentPage < totalPages) {
-        setTimeout(function() {
-          var nextButton = document.querySelector('.next-button');
-          if (nextButton) nextButton.click();
-        }, 500);
-      }
+    if (currentPage < totalPages) {
+      setTimeout(function() {
+        console.log("已到达当前页最后一个问题，准备翻页");
+        var nextButton = document.querySelector('.next-button');
+        if (nextButton && !nextButton.disabled) {
+          console.log("自动翻到下一页");
+          nextButton.click();
+        }
+      }, 500);
+    } else {
+      console.log("已到达最后一页的最后一个问题");
     }
   }
 }
 
-// 修改doc_write_all_questions函数，使用文档片段和批量DOM操作
+// 修改doc_write_all_questions函数，改为只准备题目数据而不立即显示所有题目
 function doc_write_all_questions() {
   var questionsContent = cachedDomElements.questionsContent || document.getElementById('questions-content');
   if (!questionsContent) {
@@ -199,9 +225,67 @@ function doc_write_all_questions() {
     return;
   }
   
+  // 清空问题容器
   questionsContent.innerHTML = '';
-  var fragment = document.createDocumentFragment();
   
+  // 准备问题数据
+  window.allQuestions = [];
+  
+  // 准备进度指示器
+  var progressContainer = document.createElement('div');
+  progressContainer.className = 'question-progress-container';
+  
+  var progressBar = document.createElement('div');
+  progressBar.id = 'question-progress-bar';
+  progressBar.className = 'question-progress-bar';
+  
+  var progressText = document.createElement('div');
+  progressText.id = 'question-progress-text';
+  progressText.className = 'question-progress-text';
+  progressText.textContent = '题目: 0 / 0';
+  
+  progressContainer.appendChild(progressBar);
+  progressContainer.appendChild(progressText);
+  questionsContent.appendChild(progressContainer);
+  
+  // 创建问题容器
+  var singleQuestionContainer = document.createElement('div');
+  singleQuestionContainer.id = 'single-question-container';
+  singleQuestionContainer.className = 'single-question-container';
+  questionsContent.appendChild(singleQuestionContainer);
+  
+  // 创建导航按钮
+  var navButtons = document.createElement('div');
+  navButtons.className = 'question-navigation';
+  
+  var prevButton = document.createElement('button');
+  prevButton.type = 'button';
+  prevButton.id = 'prev-question';
+  prevButton.className = 'prev-question-btn';
+  prevButton.textContent = '上一题';
+  prevButton.onclick = function() { navigateQuestion(-1); };
+  
+  var nextButton = document.createElement('button');
+  nextButton.type = 'button';
+  nextButton.id = 'next-question';
+  nextButton.className = 'next-question-btn';
+  nextButton.textContent = '跳过';
+  nextButton.onclick = function() { navigateQuestion(1); };
+  
+  var submitButton = document.createElement('button');
+  submitButton.type = 'button';
+  submitButton.id = 'submit-test';
+  submitButton.className = 'submit-button';
+  submitButton.textContent = '提交测试';
+  submitButton.style.display = 'none';
+  submitButton.onclick = function() { confirmSubmitTest(); };
+  
+  navButtons.appendChild(prevButton);
+  navButtons.appendChild(nextButton);
+  navButtons.appendChild(submitButton);
+  questionsContent.appendChild(navButtons);
+  
+  // 收集所有问题
   var n = longform ? questions.length : 371;
   
   // 如果是只测试RE量表
@@ -210,25 +294,39 @@ function doc_write_all_questions() {
     var re_index = findReScale();
     
     if (re_index !== -1) {
+      console.log("加载RE量表题目，索引为：", re_index);
+      
       // 收集RE量表的所有问题
       var re_questions = [];
       
       // 收集True问题
       for (var j = 0; j < scales[re_index][1].length; ++j) {
         var q = scales[re_index][1][j];
-        re_questions.push({
-          num: q,
-          text: questions[q]
-        });
+        if (questions[q]) {
+          re_questions.push({
+            num: q,
+            text: questions[q],
+            is_true_question: true
+          });
+          console.log("添加True题目：", q, questions[q]);
+        } else {
+          console.error("找不到题目文本：", q);
+        }
       }
       
       // 收集False问题
       for (var j = 0; j < scales[re_index][2].length; ++j) {
         var q = scales[re_index][2][j];
-        re_questions.push({
-          num: q,
-          text: questions[q]
-        });
+        if (questions[q]) {
+          re_questions.push({
+            num: q,
+            text: questions[q],
+            is_true_question: false
+          });
+          console.log("添加False题目：", q, questions[q]);
+        } else {
+          console.error("找不到题目文本：", q);
+        }
       }
       
       // 按照原始题号排序
@@ -236,63 +334,79 @@ function doc_write_all_questions() {
         return a.num - b.num;
       });
       
-      // 批量创建RE量表问题
-      var questionsFragment = document.createDocumentFragment();
+      console.log("排序后的RE量表题目：", re_questions.map(function(q) { return q.num; }).join(', '));
+      
+      // 准备RE量表问题
       for (var j = 0; j < re_questions.length; ++j) {
-        add_question_to_fragment(
-          questionsFragment,
-          re_questions[j].num, 
-          (j + 1) + ". " + re_questions[j].text,
-          true
-        );
+        window.allQuestions.push({
+          id: re_questions[j].num,
+          text: (j + 1) + ". " + re_questions[j].text,
+          isReQuestion: true
+        });
       }
-      fragment.appendChild(questionsFragment);
+    } else {
+      console.error("无法找到RE量表索引");
+      var errorMsg = document.createElement('p');
+      errorMsg.textContent = "错误：无法找到社会责任感量表数据，请刷新页面重试。";
+      errorMsg.style.color = "red";
+      singleQuestionContainer.appendChild(errorMsg);
+      return;
     }
   } else {
-    // 批量创建普通问题
-    var questionsFragment = document.createDocumentFragment();
+    // 收集普通问题
     for (var i = 1; i < n; ++i) {
-      add_question_to_fragment(questionsFragment, i, i + ". " + questions[i]);
+      if (questions[i]) {
+        window.allQuestions.push({
+          id: i,
+          text: i + ". " + questions[i],
+          isReQuestion: false
+        });
+      } else {
+        console.error("找不到题目文本：", i);
+      }
     }
-    fragment.appendChild(questionsFragment);
   }
   
-  // 一次性添加到DOM
-  questionsContent.appendChild(fragment);
+  // 设置当前题目索引
+  window.currentQuestionIndex = 0;
   
-  // 添加提交按钮
-  addSubmitButton(questionsContent);
+  // 显示第一道题目
+  showCurrentQuestion();
   
-  // 初始化分页
-  currentPage = 1;
-  updatePagination();
-  
-  // 添加快速导航
-  addQuickNavigation();
-  
-  // 设置事件委托代替每个问题单独绑定事件
-  setupEventDelegation();
-  
-  // 在文档加载完成后设置进度监控
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupProgressMonitoring);
-  } else {
-    setTimeout(setupProgressMonitoring, 0);
-  }
+  // 设置事件委托
+  setupSingleQuestionEventDelegation();
 }
 
-// 向文档片段添加问题，减少DOM操作
-function add_question_to_fragment(fragment, name, text, isReQuestion) {
-  var qid = "q" + name;
-  var questionDiv = document.createElement('div');
-  questionDiv.className = isReQuestion ? 're-question' : 'question-item';
-  questionDiv.id = qid;
+// 显示当前题目
+function showCurrentQuestion() {
+  var container = document.getElementById('single-question-container');
+  if (!container) return;
   
-  // 添加问题文本
+  // 清空容器
+  container.innerHTML = '';
+  
+  // 如果没有题目数据，显示错误信息
+  if (!window.allQuestions || window.allQuestions.length === 0) {
+    var errorMsg = document.createElement('p');
+    errorMsg.textContent = "错误：未找到题目数据，请刷新页面重试。";
+    errorMsg.style.color = "red";
+    container.appendChild(errorMsg);
+    return;
+  }
+  
+  // 获取当前题目数据
+  var questionData = window.allQuestions[window.currentQuestionIndex];
+  
+  // 创建题目元素
+  var questionElement = document.createElement('div');
+  questionElement.className = questionData.isReQuestion ? 're-question' : 'question-item';
+  questionElement.id = 'q' + questionData.id;
+  
+  // 添加题目文本
   var questionText = document.createElement('div');
   questionText.className = 'question-text';
-  questionText.textContent = text;
-  questionDiv.appendChild(questionText);
+  questionText.textContent = questionData.text;
+  questionElement.appendChild(questionText);
   
   // 创建选项容器
   var optionsContainer = document.createElement('div');
@@ -312,9 +426,15 @@ function add_question_to_fragment(fragment, name, text, isReQuestion) {
     
     var input = document.createElement('input');
     input.type = 'radio';
-    input.name = name;
+    input.name = questionData.id;
     input.value = option.value;
     input.className = 'option-input';
+    
+    // 如果已经有答案，选中对应选项
+    if (ans[questionData.id] === option.value) {
+      input.checked = true;
+      label.classList.add('active');
+    }
     
     var span = document.createElement('span');
     span.className = 'option-text';
@@ -325,131 +445,201 @@ function add_question_to_fragment(fragment, name, text, isReQuestion) {
     optionsContainer.appendChild(label);
   }
   
-  // 确保ans数组有足够大小
-  while(ans.length <= parseInt(name, 10)) {
-    ans.push(undefined);
-  }
+  questionElement.appendChild(optionsContainer);
+  container.appendChild(questionElement);
   
-  // 初始不选择任何选项
-  ans[parseInt(name, 10)] = undefined;
+  // 更新导航按钮状态
+  updateQuestionNavigation();
   
-  questionDiv.appendChild(optionsContainer);
-  fragment.appendChild(questionDiv);
+  // 更新进度条
+  updateQuestionProgress();
 }
 
-// 优化：使用批处理更新分页
-function updatePagination() {
-  var totalQuestions = longform ? questions.length - 1 : 370;
-  if (re_scale_only) {
-    var re_index = findReScale();
-    if (re_index !== -1) {
-      totalQuestions = scales[re_index][1].length + scales[re_index][2].length;
+// 更新问题导航按钮状态
+function updateQuestionNavigation() {
+  var prevButton = document.getElementById('prev-question');
+  var nextButton = document.getElementById('next-question');
+  var submitButton = document.getElementById('submit-test');
+  
+  if (!prevButton || !nextButton || !submitButton) return;
+  
+  // 上一题按钮
+  prevButton.disabled = window.currentQuestionIndex === 0;
+  
+  // 下一题按钮
+  var isLastQuestion = window.currentQuestionIndex === window.allQuestions.length - 1;
+  nextButton.textContent = isLastQuestion ? '跳过并完成' : '跳过';
+  
+  // 提交按钮
+  submitButton.style.display = isLastQuestion ? 'inline-block' : 'none';
+  
+  // 检查是否所有题目都已回答
+  var allAnswered = true;
+  for (var i = 0; i < window.allQuestions.length; i++) {
+    var qId = window.allQuestions[i].id;
+    if (!ans[qId] || ans[qId] === '?') {
+      allAnswered = false;
+      break;
     }
   }
   
-  totalPages = Math.ceil(totalQuestions / questionsPerPage);
+  submitButton.disabled = !allAnswered;
+  submitButton.className = allAnswered ? 'submit-button ready' : 'submit-button';
+}
+
+// 更新问题进度
+function updateQuestionProgress() {
+  var progressBar = document.getElementById('question-progress-bar');
+  var progressText = document.getElementById('question-progress-text');
   
-  // 优化：在一个动画帧中批量更新UI
-  requestAnimationFrame(function() {
-  // 更新分页导航
-  updatePaginationControls();
+  if (!progressBar || !progressText || !window.allQuestions) return;
   
-  // 显示当前页的问题
-  showQuestionsForPage(currentPage);
+  var total = window.allQuestions.length;
+  var current = window.currentQuestionIndex + 1;
+  var percentage = (current / total) * 100;
   
-  // 更新快速导航（可选参数控制是否递归调用）
-  setTimeout(function() {
-    addQuickNavigation(true);
-  }, 0);
+  progressBar.style.width = percentage + '%';
+  progressText.textContent = '题目: ' + current + ' / ' + total + ' (' + Math.round(percentage) + '%)';
+  
+  // 计算已回答的题目数
+  var answeredCount = 0;
+  for (var i = 0; i < window.allQuestions.length; i++) {
+    var qId = window.allQuestions[i].id;
+    if (ans[qId] && ans[qId] !== '?') {
+      answeredCount++;
+    }
+  }
+  
+  var answeredPercentage = (answeredCount / total) * 100;
+  var completionText = ' - 已回答: ' + answeredCount + ' (' + Math.round(answeredPercentage) + '%)';
+  progressText.textContent += completionText;
+}
+
+// 导航到上一题或下一题
+function navigateQuestion(direction) {
+  var newIndex = window.currentQuestionIndex + direction;
+  
+  // 边界检查
+  if (newIndex < 0 || newIndex >= window.allQuestions.length) return;
+  
+  // 更新当前题目索引
+  window.currentQuestionIndex = newIndex;
+  
+  // 显示新的题目
+  showCurrentQuestion();
+  
+  // 滚动到顶部
+  var container = document.getElementById('single-question-container');
+  if (container) {
+    container.scrollIntoView({behavior: 'smooth', block: 'start'});
+  }
+}
+
+// 为单题模式设置事件委托
+function setupSingleQuestionEventDelegation() {
+  var container = document.getElementById('single-question-container');
+  if (!container) return;
+  
+  console.log("设置单题模式事件委托...");
+  
+  // 监听选项点击
+  container.addEventListener('change', function(e) {
+    if (e.target && e.target.type === 'radio') {
+      // 移除当前问题组中所有选项的active类
+      var optionsContainer = e.target.closest('.options-container');
+      if (optionsContainer) {
+        var labels = optionsContainer.querySelectorAll('.option-label');
+        for (var j = 0; j < labels.length; j++) {
+          labels[j].classList.remove('active');
+        }
+        
+        // 给当前选中选项添加active类
+        e.target.closest('.option-label').classList.add('active');
+        
+        // 更新ans数组
+        var questionNumber = parseInt(e.target.name, 10);
+        var answerValue = e.target.value;
+        
+        console.log("用户回答：题号 " + questionNumber + " = " + answerValue);
+        
+        // 确保ans数组有足够大小
+        while(ans.length <= questionNumber) {
+          ans.push(undefined);
+        }
+        ans[questionNumber] = answerValue;
+        
+        // 更新导航按钮状态
+        updateQuestionNavigation();
+        
+        // 更新进度
+        updateQuestionProgress();
+        
+        // 如果不是最后一题，自动前进到下一题
+        if (window.currentQuestionIndex < window.allQuestions.length - 1) {
+          setTimeout(function() {
+            navigateQuestion(1);
+          }, 300);
+        }
+      }
+    }
   });
 }
 
-// 页面加载完成后初始化测试
-window.onload = function() {
-  try {
-    console.log("页面加载完成，开始初始化...");
-    
-    // 确保数据加载正确
-    if (typeof questions === 'undefined' || typeof scales === 'undefined') {
-      console.error("测试数据未正确加载");
-      alert("测试数据未正确加载，请刷新页面重试。如果问题持续存在，请联系管理员。");
-      return;
+// 确认提交测试
+function confirmSubmitTest() {
+  // 检查是否所有题目都已回答
+  var unansweredCount = 0;
+  for (var i = 0; i < window.allQuestions.length; i++) {
+    var qId = window.allQuestions[i].id;
+    if (!ans[qId] || ans[qId] === '?') {
+      unansweredCount++;
     }
-    
-    // 缓存DOM元素
-    cacheDomElements();
-    
-    // 初始化ans数组，使用更高效的方式
-    var maxQuestions = longform ? questions.length : 371;
-    ans = new Array(maxQuestions).fill(undefined);
-    
-    // 更新标题
-    var titleElement = document.getElementById('test-title');
-    if (titleElement && questions && questions[0]) {
-      titleElement.textContent = questions[0];
-    }
-    
-    // 初始化测试问题，但不立即显示
-    doc_write_all_questions();
-    
-    console.log("初始化完成");
-  } catch (error) {
-    console.error("初始化过程中出错：", error);
-    alert("初始化测试时发生错误：" + error.message + "。请刷新页面重试。");
   }
-};
+  
+  var message;
+  if (unansweredCount > 0) {
+    message = '您还有 ' + unansweredCount + ' 个问题未完成。确定要提交测试吗？';
+  } else {
+    message = '确定要提交测试并查看结果吗？';
+  }
+  
+  if (confirm(message)) {
+    score_rb(document.forms.questions);
+  }
+}
+
+// 重新加载问题
+function reloadQuestions() {
+  // 更新标题
+  var titleElement = document.getElementById('test-title');
+  if (titleElement) {
+    titleElement.innerHTML = re_scale_only ? "社会责任感测试(RE量表)" : questions[0];
+  }
+  
+  // 清空ans数组，准备新测试
+  var maxQuestions = longform ? questions.length : 371;
+  ans = new Array(maxQuestions).fill(undefined);
+  
+  // 使用单题模式加载问题
+  doc_write_all_questions();
+}
 
 // 开始测试的函数
 function startTest() {
+  // 隐藏配置面板
   document.querySelector('.config-panel').style.display = 'none';
-  document.getElementById('questions-container').style.display = 'block';
   
-  // 设置进度监控
-  setupProgressMonitoring();
+  // 显示问题容器
+  var questionsContainer = document.getElementById('questions-container');
+  questionsContainer.style.display = 'block';
+  
+  // 初始化问题
+  reloadQuestions();
   
   // 滚动到问题区域
-  document.getElementById('questions-container').scrollIntoView({behavior: 'smooth'});
-}
-
-// 显示当前页的问题 - 优化DOM操作
-function showQuestionsForPage(page) {
-  var questionsContent = cachedDomElements.questionsContent || document.getElementById('questions-content');
-  if (!questionsContent) return;
+  questionsContainer.scrollIntoView({behavior: 'smooth'});
   
-  // 优化：使用类名选择器而不是复杂选择器
-  var allQuestions = questionsContent.getElementsByClassName('question-item');
-  var reQuestions = questionsContent.getElementsByClassName('re-question');
-  var totalQuestions = allQuestions.length + reQuestions.length;
-  
-  // 计算当前页应该显示哪些问题
-  var startIndex = (page - 1) * questionsPerPage;
-  var endIndex = Math.min(startIndex + questionsPerPage, totalQuestions);
-  
-  // 批量处理DOM显示/隐藏，减少布局重排次数
-  requestAnimationFrame(function() {
-    // 隐藏所有问题
-    for (var i = 0; i < allQuestions.length; i++) {
-      allQuestions[i].style.display = 'none';
-    }
-    for (var i = 0; i < reQuestions.length; i++) {
-      reQuestions[i].style.display = 'none';
-    }
-    
-    // 显示当前页的问题
-    var questionsList = Array.from(allQuestions).concat(Array.from(reQuestions));
-    questionsList.sort(function(a, b) {
-      return a.id.localeCompare(b.id);
-    });
-    
-    for (var i = startIndex; i < endIndex; i++) {
-      if (questionsList[i]) {
-        questionsList[i].style.display = 'block';
-      }
-    }
-    
-    // 更新进度条
-    updateProgressBar();
-  });
+  console.log("测试开始 - 性别:", gender, "测试类型:", re_scale_only ? "社会责任感" : (longform ? "完整" : "简短"));
 }
 
 // 更新分页控制器 - 优化DOM操作
@@ -1170,13 +1360,197 @@ function addActionButtons(resultsContent) {
     if (questionsContainer) questionsContainer.style.display = 'block';
   };
   
-  var pdfButton = document.createElement('button');
-  pdfButton.textContent = '导出PDF';
-  pdfButton.onclick = function() { makeMpdf(); };
+  // 添加JSON导出按钮
+  var jsonButton = document.createElement('button');
+  jsonButton.textContent = '导出JSON数据';
+  jsonButton.className = 'export-button json-button';
+  jsonButton.onclick = function() { exportTestResults(); };
+  
+  // 添加CSV导出按钮
+  var csvButton = document.createElement('button');
+  csvButton.textContent = '导出CSV数据';
+  csvButton.className = 'export-button csv-button';
+  csvButton.onclick = function() { exportCSVResults(); };
   
   buttonContainer.appendChild(backButton);
-  buttonContainer.appendChild(pdfButton);
+  buttonContainer.appendChild(jsonButton);
+  buttonContainer.appendChild(csvButton);
   resultsContent.appendChild(buttonContainer);
+}
+
+// 导出结果为CSV格式
+function exportCSVResults() {
+  try {
+    // 显示加载指示器
+    var loadingIndicator = document.createElement('div');
+    loadingIndicator.id = 'export-loading';
+    loadingIndicator.innerHTML = '<div class="spinner"></div><p>正在准备CSV数据，请稍候...</p>';
+    loadingIndicator.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:flex; flex-direction:column; justify-content:center; align-items:center; color:#fff; z-index:9999;';
+    document.body.appendChild(loadingIndicator);
+    
+    setTimeout(function() {
+      try {
+        // 准备量表结果CSV
+        var scaleResultsCSV = "量表代码,量表名称,原始分,K校正分,T分,回答百分比\n";
+        
+        // 遍历所有量表，计算得分
+        for (var i = 0; i < scales.length; i++) {
+          var scaleInfo = scales[i][0];
+          var tscale = scales[i][3 + gender];
+          
+          // 跳过关键项目
+          if (tscale === undefined) continue;
+          
+          // 计算量表得分
+          var trueQuestions = scales[i][1];
+          var falseQuestions = scales[i][2];
+          var rawScore = 0;
+          var answeredCount = 0;
+          
+          // 处理True问题
+          for (var j = 0; j < trueQuestions.length; j++) {
+            var q = trueQuestions[j];
+            switch (ans[q]) {
+              case "T":
+                answeredCount++;
+                rawScore++;
+                break;
+              case "F":
+                answeredCount++;
+                break;
+            }
+          }
+          
+          // 处理False问题
+          for (var j = 0; j < falseQuestions.length; j++) {
+            var q = falseQuestions[j];
+            switch (ans[q]) {
+              case "F":
+                answeredCount++;
+                rawScore++;
+                break;
+              case "T":
+                answeredCount++;
+                break;
+            }
+          }
+          
+          // 计算K校正得分和T分
+          var kScore, tScore;
+          if (scaleInfo[0] === "K") {
+            k = rawScore;
+          }
+          
+          if (tscale[0]) {
+            // K校正
+            kScore = k * tscale[0] + rawScore;
+            kScore = Math.floor(kScore + 0.5);
+            tScore = tscale[kScore + 1];
+          } else {
+            kScore = "";
+            tScore = tscale[rawScore + 1];
+          }
+          
+          // 计算百分比
+          var percent = (answeredCount * 100) / (trueQuestions.length + falseQuestions.length);
+          
+          // 添加量表结果行
+          scaleResultsCSV += '"' + scaleInfo[1] + '","' + scaleInfo[2] + '",' + 
+                            rawScore + ',' + (kScore !== "" ? kScore : "") + ',' + 
+                            tScore + ',' + percent.toPrecision(3) + '\n';
+        }
+        
+        // 准备答案CSV
+        var answersCSV = "题号,问题,答案\n";
+        for (var i = 1; i < ans.length; i++) {
+          if (ans[i]) {
+            // 处理问题文本中的双引号，CSV格式中需要将双引号变成两个双引号
+            var questionText = questions[i].replace(/"/g, '""');
+            answersCSV += i + ',"' + questionText + '",' + ans[i] + '\n';
+          }
+        }
+        
+        // 准备关键项目CSV
+        var criticalItemsCSV = "量表代码,量表名称,题号,答案,问题文本\n";
+        for (var i = 0; i < scales.length; i++) {
+          var scaleInfo = scales[i][0];
+          var tscale = scales[i][3 + gender];
+          
+          // 只处理关键项目
+          if (tscale !== undefined) continue;
+          
+          var trueQuestions = scales[i][1];
+          var falseQuestions = scales[i][2];
+          
+          // 处理True问题
+          for (var j = 0; j < trueQuestions.length; j++) {
+            var q = trueQuestions[j];
+            if (ans[q] === "T") {
+              var questionText = questions[q].replace(/"/g, '""');
+              criticalItemsCSV += '"' + scaleInfo[1] + '","' + scaleInfo[2] + '",' + 
+                                q + ',True,"' + questionText + '"\n';
+            }
+          }
+          
+          // 处理False问题
+          for (var j = 0; j < falseQuestions.length; j++) {
+            var q = falseQuestions[j];
+            if (ans[q] === "F") {
+              var questionText = questions[q].replace(/"/g, '""');
+              criticalItemsCSV += '"' + scaleInfo[1] + '","' + scaleInfo[2] + '",' + 
+                                q + ',False,"' + questionText + '"\n';
+            }
+          }
+        }
+        
+        // 合并所有CSV数据
+        var csvData = "# MMPI测试结果 - " + (gender === 0 ? "男性" : "女性") + " - " + 
+                      (longform ? "完整测试" : (re_scale_only ? "社会责任感测试" : "简短测试")) + "\n" +
+                      "# 导出时间: " + new Date().toLocaleString() + "\n\n" +
+                      "## 量表结果\n" + scaleResultsCSV + "\n" +
+                      "## 答案\n" + answersCSV + "\n" +
+                      "## 关键项目\n" + criticalItemsCSV;
+        
+        // 添加UTF-8 BOM头，确保Excel正确识别中文
+        var BOM = "\uFEFF";
+        csvData = BOM + csvData;
+        
+        // 创建Blob对象，明确指定UTF-8编码
+        var blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+        
+        // 创建下载链接
+        var downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(blob);
+        downloadLink.download = getNowFormatDate() + '_MMPI结果数据.csv';
+        
+        // 模拟点击下载
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        
+        // 移除加载指示器
+        document.body.removeChild(loadingIndicator);
+        
+        // 提示用户
+        alert("测试结果数据已成功导出为CSV格式。此格式便于在Excel等电子表格软件中分析。");
+      } catch (error) {
+        console.error("导出CSV数据时出错：", error);
+        alert("导出数据时出错：" + error.message);
+        
+        // 移除加载指示器
+        document.body.removeChild(loadingIndicator);
+      }
+    }, 100);
+  } catch (error) {
+    console.error("导出CSV数据过程中出错：", error);
+    alert("导出CSV数据时发生错误：" + error.message);
+    
+    // 移除加载指示器
+    var loadingElement = document.getElementById('export-loading');
+    if (loadingElement) {
+      document.body.removeChild(loadingElement);
+    }
+  }
 }
 
 // 添加提交按钮
@@ -1236,43 +1610,73 @@ function checkIncompleteQuestions() {
   
   var allQuestions = questionsContent.querySelectorAll('.question-item, .re-question');
   
-  for (var i = 0; i < allQuestions.length; i++) {
-    var questionId = allQuestions[i].id;
+  console.log("开始检查未完成问题...");
+  
+  // 将问题元素按ID排序
+  var sortedQuestions = Array.from(allQuestions).sort(function(a, b) {
+    var idA = parseInt(a.id.substring(1), 10);
+    var idB = parseInt(b.id.substring(1), 10);
+    return idA - idB;
+  });
+  
+  // 检查每个问题的答案状态
+  for (var i = 0; i < sortedQuestions.length; i++) {
+    var questionId = sortedQuestions[i].id;
     if (questionId) {
       var questionNumber = parseInt(questionId.substring(1), 10); // 去掉"q"前缀并转为数字
       
       // 检查ans数组中是否没有这个问题的答案，或者答案是否为"?"
       if (!ans[questionNumber] || ans[questionNumber] === "?") {
-        incompleteQuestions.push(questionNumber);
+        incompleteQuestions.push({
+          index: i,
+          number: questionNumber,
+          element: sortedQuestions[i]
+        });
+        console.log("未完成题目：", questionNumber, "显示序号：", i+1);
       }
     }
   }
   
   if (incompleteQuestions.length > 0) {
-    // 计算第一个未完成问题所在的页码
-    var firstIncompletePage = Math.ceil(incompleteQuestions[0] / questionsPerPage);
+    // 找到第一个未完成问题的索引
+    var firstIncompleteIndex = incompleteQuestions[0].index;
+    
+    // 计算它所在的页码
+    var firstIncompletePage = Math.floor(firstIncompleteIndex / questionsPerPage) + 1;
+    
+    console.log("第一个未完成问题索引：", firstIncompleteIndex, "页码：", firstIncompletePage);
     
     // 创建未完成问题提示
     var message = '您还有 ' + incompleteQuestions.length + ' 个问题未完成（' + 
-                 Math.round((incompleteQuestions.length / allQuestions.length) * 100) + '%）。\n';
+                 Math.round((incompleteQuestions.length / sortedQuestions.length) * 100) + '%）。\n';
     message += '第一个未完成的问题在第 ' + firstIncompletePage + ' 页。\n';
     message += '是否要跳转到该页？';
     
     if (confirm(message)) {
       currentPage = firstIncompletePage;
       updatePagination();
-      // 滚动到第一个未完成的问题
-      var questionElement = document.getElementById('q' + incompleteQuestions[0]);
-      if (questionElement) {
-        setTimeout(function() {
-          questionElement.scrollIntoView({behavior: 'smooth', block: 'center'});
+      
+      // 延迟执行，确保分页完成后再滚动
+      setTimeout(function() {
+        // 找到页面上第一个未完成的问题并滚动到它
+        var firstVisibleIncomplete = incompleteQuestions.find(function(q) {
+          return q.element.style.display !== 'none';
+        });
+        
+        if (firstVisibleIncomplete) {
+          firstVisibleIncomplete.element.scrollIntoView({behavior: 'smooth', block: 'center'});
+          
           // 高亮未完成的问题
-          questionElement.classList.add('highlight-incomplete');
+          firstVisibleIncomplete.element.classList.add('highlight-incomplete');
           setTimeout(function() {
-            questionElement.classList.remove('highlight-incomplete');
+            firstVisibleIncomplete.element.classList.remove('highlight-incomplete');
           }, 3000);
-        }, 500);
-      }
+          
+          console.log("滚动到问题：", firstVisibleIncomplete.number);
+        } else {
+          console.error("无法找到可见的未完成问题");
+        }
+      }, 500);
     }
   } else {
     alert('恭喜！您已完成所有问题。');
@@ -1609,89 +2013,6 @@ function analyze_re_scale_result(scale_table, resultsContent) {
   }
 }
 
-// 修改reloadQuestions函数以支持分页
-function reloadQuestions() {
-  // 更新标题
-  var titleElement = document.getElementById('test-title');
-  if (titleElement) {
-    titleElement.innerHTML = re_scale_only ? "社会责任感测试(RE量表)" : questions[0];
-  }
-  
-  // 清空并重新加载问题
-  var questionsContent = cachedDomElements.questionsContent || document.getElementById('questions-content');
-  if (questionsContent) {
-    // 清空内容
-    questionsContent.innerHTML = '';
-    
-    // 使用文档片段批量创建问题
-    var fragment = document.createDocumentFragment();
-    
-    // 如果只测试RE量表
-    if (re_scale_only) {
-      // 查找RE量表的索引
-      var re_index = findReScale();
-      
-      if (re_index !== -1) {
-        // 收集RE量表的所有问题
-        var re_questions = [];
-        
-        // 收集True问题
-        for (var i = 0; i < scales[re_index][1].length; ++i) {
-          var q_num = scales[re_index][1][i];
-          re_questions.push({
-            original_num: q_num,
-            text: questions[q_num]
-          });
-        }
-        
-        // 收集False问题
-        for (var i = 0; i < scales[re_index][2].length; ++i) {
-          var q_num = scales[re_index][2][i];
-          re_questions.push({
-            original_num: q_num,
-            text: questions[q_num]
-          });
-        }
-        
-        // 按照原始题号排序
-        re_questions.sort(function(a, b) {
-          return a.original_num - b.original_num;
-        });
-        
-        // 显示排序后的问题，使用连续的序号
-        for (var i = 0; i < re_questions.length; ++i) {
-          var q = re_questions[i];
-          add_question_to_fragment(
-            fragment, 
-            q.original_num, // 保留原始题号作为name属性，用于计分
-            (i + 1) + ". " + q.text, // 显示连续的序号
-            true // 标记为RE量表问题
-          );
-        }
-      }
-    } else {
-      // 正常显示所有问题
-      var n = longform ? questions.length : 371;
-      for (var i = 1; i < n; ++i) {
-        add_question_to_fragment(fragment, i, i + ". " + questions[i]);
-      }
-    }
-    
-    // 一次性添加到DOM
-    questionsContent.appendChild(fragment);
-    
-    // 添加提交按钮
-    addSubmitButton(questionsContent);
-    
-    // 初始化分页
-    currentPage = 1;
-    updatePagination();
-    
-    // 设置事件委托
-    setupEventDelegation();
-  }
-}
-
 // Set the form length
 function use_long_form(lf) {
   longform = lf;
@@ -1719,5 +2040,198 @@ function setupProgressMonitoring() {
     updateSubmitButtonState();
   }, 200); // 短暂延迟确保DOM已完全加载
 }
+
+// 数据导出函数 - 将结果导出为JSON格式
+function exportTestResults() {
+  try {
+    // 显示加载指示器
+    var loadingIndicator = document.createElement('div');
+    loadingIndicator.id = 'export-loading';
+    loadingIndicator.innerHTML = '<div class="spinner"></div><p>正在准备数据，请稍候...</p>';
+    loadingIndicator.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:flex; flex-direction:column; justify-content:center; align-items:center; color:#fff; z-index:9999;';
+    document.body.appendChild(loadingIndicator);
+    
+    setTimeout(function() {
+      try {
+        // 收集所有答案数据
+        var testData = {
+          timestamp: new Date().toISOString(),
+          testType: longform ? "完整测试" : (re_scale_only ? "社会责任感测试" : "简短测试"),
+          gender: gender === 0 ? "男性" : "女性",
+          answers: []
+        };
+        
+        // 添加答案数据
+        for (var i = 1; i < ans.length; i++) {
+          if (ans[i]) {
+            testData.answers.push({
+              questionNumber: i,
+              question: questions[i],
+              answer: ans[i]
+            });
+          }
+        }
+        
+        // 收集量表结果
+        testData.scaleResults = [];
+        
+        // 遍历所有量表，计算得分
+        for (var i = 0; i < scales.length; i++) {
+          var scaleInfo = scales[i][0];
+          var tscale = scales[i][3 + gender];
+          
+          // 跳过关键项目
+          if (tscale === undefined) continue;
+          
+          // 计算量表得分
+          var trueQuestions = scales[i][1];
+          var falseQuestions = scales[i][2];
+          var rawScore = 0;
+          var answeredCount = 0;
+          
+          // 处理True问题
+          for (var j = 0; j < trueQuestions.length; j++) {
+            var q = trueQuestions[j];
+            switch (ans[q]) {
+              case "T":
+                answeredCount++;
+                rawScore++;
+                break;
+              case "F":
+                answeredCount++;
+                break;
+            }
+          }
+          
+          // 处理False问题
+          for (var j = 0; j < falseQuestions.length; j++) {
+            var q = falseQuestions[j];
+            switch (ans[q]) {
+              case "F":
+                answeredCount++;
+                rawScore++;
+                break;
+              case "T":
+                answeredCount++;
+                break;
+            }
+          }
+          
+          // 计算K校正得分和T分
+          var kScore, tScore;
+          if (scaleInfo[0] === "K") {
+            k = rawScore;
+          }
+          
+          if (tscale[0]) {
+            // K校正
+            kScore = k * tscale[0] + rawScore;
+            kScore = Math.floor(kScore + 0.5);
+            tScore = tscale[kScore + 1];
+          } else {
+            kScore = undefined;
+            tScore = tscale[rawScore + 1];
+          }
+          
+          // 计算百分比
+          var percent = (answeredCount * 100) / (trueQuestions.length + falseQuestions.length);
+          
+          // 添加量表结果
+          testData.scaleResults.push({
+            code: scaleInfo[1],
+            name: scaleInfo[2],
+            rawScore: rawScore,
+            kCorrectedScore: kScore,
+            tScore: tScore,
+            percentAnswered: parseFloat(percent.toPrecision(3))
+          });
+        }
+        
+        // 添加关键项目
+        testData.criticalItems = [];
+        for (var i = 0; i < scales.length; i++) {
+          var scaleInfo = scales[i][0];
+          var tscale = scales[i][3 + gender];
+          
+          // 只处理关键项目
+          if (tscale !== undefined) continue;
+          
+          var trueQuestions = scales[i][1];
+          var falseQuestions = scales[i][2];
+          
+          // 处理True问题
+          for (var j = 0; j < trueQuestions.length; j++) {
+            var q = trueQuestions[j];
+            if (ans[q] === "T") {
+              testData.criticalItems.push({
+                code: scaleInfo[1],
+                name: scaleInfo[2],
+                questionNumber: q,
+                answer: "True",
+                questionText: questions[q]
+              });
+            }
+          }
+          
+          // 处理False问题
+          for (var j = 0; j < falseQuestions.length; j++) {
+            var q = falseQuestions[j];
+            if (ans[q] === "F") {
+              testData.criticalItems.push({
+                code: scaleInfo[1],
+                name: scaleInfo[2],
+                questionNumber: q,
+                answer: "False",
+                questionText: questions[q]
+              });
+            }
+          }
+        }
+        
+        // 生成JSON字符串，使用格式化并保持中文字符
+        var jsonString = JSON.stringify(testData, null, 2);
+        
+        // 添加UTF-8 BOM头，确保Excel和其他应用程序正确识别中文
+        var BOM = "\uFEFF";
+        var jsonStringWithBOM = BOM + jsonString;
+        
+        // 创建Blob对象，明确指定UTF-8编码
+        var blob = new Blob([jsonStringWithBOM], { type: 'application/json;charset=utf-8' });
+        
+        // 创建下载链接
+        var downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(blob);
+        downloadLink.download = getNowFormatDate() + '_MMPI结果数据.json';
+        
+        // 模拟点击下载
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        
+        // 移除加载指示器
+        document.body.removeChild(loadingIndicator);
+        
+        // 提示用户
+        alert("测试结果数据已成功导出为JSON格式。此格式更适合专业分析和保存。");
+      } catch (error) {
+        console.error("导出JSON数据时出错：", error);
+        alert("导出数据时出错：" + error.message);
+        
+        // 移除加载指示器
+        document.body.removeChild(loadingIndicator);
+      }
+    }, 100);
+  } catch (error) {
+    console.error("导出数据过程中出错：", error);
+    alert("导出数据时发生错误：" + error.message);
+    
+    // 移除加载指示器
+    var loadingElement = document.getElementById('export-loading');
+    if (loadingElement) {
+      document.body.removeChild(loadingElement);
+    }
+  }
+}
+
 
 
