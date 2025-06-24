@@ -1,130 +1,191 @@
-<html>
-  <script src="./html2canvas.min.js"></script>
-  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.min.js"></script> -->
-  <script src="./jspdf.min.js"></script>
-  <script src="https://cdn.bootcss.com/html2canvas/0.5.0-beta4/html2canvas.js"></script>
-  <script src="https://cdn.bootcss.com/jspdf/1.3.4/jspdf.debug.js"></script>
-  <script src="./jquery-3.6.3.min.js"></script>
+<!DOCTYPE html>
+<html lang="zh-CN">
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MMPI-2 明尼苏达多项人格测验 -JuneOver24</title>
     <link rel="stylesheet" href="./style.css" />
-  </head>
-  <body>
+    <script src="./jquery-3.6.3.min.js"></script>
+    <script src="./html2canvas.min.js"></script>
+    <script src="./jspdf.min.js"></script>
     <script type="text/javascript" src="./data.js"></script>
     <script type="text/javascript" src="./script.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1 id="test-title">MMPI-2 明尼苏达多项人格测验</h1>
 
-    <form name="config" action="#">
-      <p>
-        <input
-          type="radio"
-          name="gender"
-          value="M"
-          onclick="set_gender(0);"
-          checked
-        />我是男性&nbsp;
-        <input
-          type="radio"
-          name="gender"
-          value="F"
-          onclick="set_gender(1);"
-        />我是女性<br />
+      <!-- 优化的配置面板 -->
+      <div class="config-panel">
+        <h2>测试配置</h2>
+        <form name="config" action="#" class="config-form">
+          <div class="config-section">
+            <div class="config-group">
+              <h3>性别</h3>
+              <div class="config-options">
+                <label class="config-option">
+                  <input type="radio" name="gender" value="M" onclick="set_gender(0);" checked />
+                  <span>男性</span>
+                </label>
+                <label class="config-option">
+                  <input type="radio" name="gender" value="F" onclick="set_gender(1);" />
+                  <span>女性</span>
+                </label>
+              </div>
+            </div>
 
-        <input
-          type="radio"
-          name="testform"
-          value="L"
-          onclick="use_long_form(true);"
-          checked
-        />长测试&nbsp;
-        <input
-          type="radio"
-          name="testform"
-          value="S"
-          onclick="use_long_form(false);"
-        />短测试<br />
-      </p>
-    </form>
+            <div class="config-group">
+              <h3>测试类型</h3>
+              <div class="config-options">
+                <label class="config-option">
+                  <input type="radio" name="testform" value="L" onclick="use_long_form(true); reloadQuestions();" checked />
+                  <span>完整测试</span>
+                  <small>(包含所有问题，结果更准确)</small>
+                </label>
+                <label class="config-option">
+                  <input type="radio" name="testform" value="S" onclick="use_long_form(false); reloadQuestions();" />
+                  <span>简短测试</span>
+                  <small>(只包含前370个问题)</small>
+                </label>
+                <label class="config-option">
+                  <input type="radio" name="testform" value="RE" onclick="use_re_scale(); reloadQuestions();" />
+                  <span>社会责任感测试</span>
+                  <small>(仅RE量表)</small>
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="test-instructions">
+            <h3>测试说明</h3>
+            <p>本测验包含多个问题，请根据您的真实情况回答。回答没有对错之分，请选择最符合您自身情况的选项。</p>
+            <p>每个问题有三个选项：</p>
+            <ul>
+              <li><strong>是</strong> - 表示同意或符合描述</li>
+              <li><strong>否</strong> - 表示不同意或不符合描述</li>
+              <li><strong>无法确定</strong> - 表示无法判断</li>
+            </ul>
+            <p>测试完成后，系统将自动生成测试报告。您可以将报告导出为PDF文件。</p>
+          </div>
+          
+          <div class="start-button-container">
+            <button type="button" onclick="startTest();" class="start-button">开始测试</button>
+          </div>
+        </form>
+      </div>
 
-    <h1>
-      <link rel="stylesheet" href="./style.css" />
-      <script type="text/javascript">
-        document.write(questions[0]);
-      </script>
-    </h1>
+      <div id="questions-container" style="display: none;">
+        <form name="questions" action="#" onsubmit="return false;">
+          <div id="questions-content">
+            <!-- 问题内容将由JavaScript动态生成 -->
+          </div>
+          <!-- 按钮会由JavaScript动态添加 -->
+        </form>
+      </div>
 
-    <form name="questions" action="#">
-      <p>
-        <script type="text/javascript">
-          doc_write_all_questions();
-        </script>
-        <br />
-        <input
-          type="button"
-          value="我已确认我选的无误！开始计算得分"
-          onclick="score_rb(document.forms.questions);"
-        />
-        <br /><br />
-      </p>
-    </form>
-  </body>
-  <button onclick="makeMpdf()">导出PDF</button>
-  <button onclick="mail()">
-    导出PDF后请将文件发送至gushao@gushao.club，将在三天内回复分析结果
-  </button>
+      <!-- 添加结果显示区域 -->
+      <div id="results-container" style="display: none;">
+        <h2>测试结果</h2>
+        <div id="results-content"></div>
+      </div>
+    </div>
 
-  <script>
-    //将html页面导出.pdf格式文件(适用于jQuery、vue库)  -- xzz 2018/04/24
-    function makeMpdf(pdfName) {
-      if (confirm("您确认下载该PDF文件吗?")) {
-        var target = document.body;
-        target.style.background = "#FFFFFF";
-        if (pdfName == "11111.pdf") pdfName = getNowFormatDate();
-
-        html2canvas(target, {
-          onrendered: function (canvas) {
-            var contentWidth = canvas.width;
-            var contentHeight = canvas.height;
-
-            //一页pdf显示html页面生成的canvas高度;
-            var pageHeight = (contentWidth / 592.28) * 841.89;
-            //未生成pdf的html页面高度
-            var leftHeight = contentHeight;
-            //页面偏移
-            var position = 0;
-            //a4纸的尺寸[595.28,841.89]，html页面生成的canvas在pdf中图片的宽高
-            var imgWidth = 595.28;
-            var imgHeight = (592.28 / contentWidth) * contentHeight;
-
-            var pageData = canvas.toDataURL("image/jpeg", 1.0);
-
-            var pdf = new jsPDF("", "pt", "a4");
-
-            //有两个高度需要区分，一个是html页面的实际高度，和生成pdf的页面高度(841.89)
-            //当内容未超过pdf一页显示的范围，无需分页
-            if (leftHeight < pageHeight) {
-              pdf.addImage(pageData, "JPEG", 0, 0, imgWidth, imgHeight);
-            } else {
-              while (leftHeight > 0) {
-                pdf.addImage(
-                  pageData,
-                  "JPEG",
-                  0,
-                  position,
-                  imgWidth,
-                  imgHeight
-                );
-                leftHeight -= pageHeight;
-                position -= 841.89;
-                //避免添加空白页
-                if (leftHeight > 0) {
-                  pdf.addPage();
+    <script>
+      //将html页面导出.pdf格式文件(适用于jQuery、vue库)  -- xzz 2018/04/24
+      function makeMpdf(pdfName) {
+        if (confirm("您确认下载该PDF文件吗?")) {
+          try {
+            var target = document.body;
+            var originalBgColor = target.style.background;
+            
+            // 保存当前页面滚动位置
+            var scrollPos = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+            
+            // 临时修改样式以优化PDF输出
+            target.style.background = "#FFFFFF";
+            
+            if (!pdfName || pdfName == "11111.pdf") {
+              pdfName = getNowFormatDate();
+            }
+  
+            html2canvas(target, {
+              allowTaint: true,
+              useCORS: true,
+              scale: 2, // 提高分辨率
+              onrendered: function (canvas) {
+                try {
+                  var contentWidth = canvas.width;
+                  var contentHeight = canvas.height;
+  
+                  //一页pdf显示html页面生成的canvas高度;
+                  var pageHeight = (contentWidth / 592.28) * 841.89;
+                  //未生成pdf的html页面高度
+                  var leftHeight = contentHeight;
+                  //页面偏移
+                  var position = 0;
+                  //a4纸的尺寸[595.28,841.89]，html页面生成的canvas在pdf中图片的宽高
+                  var imgWidth = 595.28;
+                  var imgHeight = (592.28 / contentWidth) * contentHeight;
+  
+                  var pageData = canvas.toDataURL("image/jpeg", 1.0);
+  
+                  var pdf = new jsPDF("", "pt", "a4");
+  
+                  //有两个高度需要区分，一个是html页面的实际高度，和生成pdf的页面高度(841.89)
+                  //当内容未超过pdf一页显示的范围，无需分页
+                  if (leftHeight < pageHeight) {
+                    pdf.addImage(pageData, "JPEG", 0, 0, imgWidth, imgHeight);
+                  } else {
+                    while (leftHeight > 0) {
+                      pdf.addImage(
+                        pageData,
+                        "JPEG",
+                        0,
+                        position,
+                        imgWidth,
+                        imgHeight
+                      );
+                      leftHeight -= pageHeight;
+                      position -= 841.89;
+                      //避免添加空白页
+                      if (leftHeight > 0) {
+                        pdf.addPage();
+                      }
+                    }
+                  }
+                  
+                  // 添加文件信息
+                  pdf.setProperties({
+                    title: '明尼苏达多项人格测验结果',
+                    subject: 'MMPI-2测试结果',
+                    author: 'JuneOver24',
+                    keywords: 'MMPI, 心理测试, 人格测验',
+                    creator: 'MMPI在线测试系统'
+                  });
+                  
+                  // 保存PDF文件
+                  pdf.save(pdfName + ".pdf");
+                  
+                  // 提示用户
+                  alert("PDF文件已生成，请将此文件发送至gushao@gushao.club获取专业分析结果。");
+                } catch (pdfError) {
+                  console.error("生成PDF时出错：", pdfError);
+                  alert("生成PDF时出错：" + pdfError.message);
+                } finally {
+                  // 恢复原来的背景颜色
+                  target.style.background = originalBgColor;
+                  
+                  // 恢复滚动位置
+                  window.scrollTo(0, scrollPos);
                 }
               }
-            }
-            pdf.save(pdfName + ".pdf");
-          },
-        });
+            });
+          } catch (error) {
+            console.error("导出PDF过程中出错：", error);
+            alert("导出PDF时发生错误：" + error.message);
+          }
+        }
       }
-    }
-  </script>
+    </script>
+  </body>
 </html>
