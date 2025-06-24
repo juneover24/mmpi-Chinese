@@ -887,3 +887,74 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
   
+  /* 添加PDF加载指示器样式 */
+  #pdf-loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    z-index: 9999;
+  }
+  
+  #pdf-loading .spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  /* 性能优化相关样式 */
+  .will-change-transform {
+    will-change: transform;
+  }
+  
+  .hardware-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+  
+  /* 优化表格渲染性能 */
+  table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+  }
+  
+  /* 优化移动端性能 */
+  @media (max-width: 768px) {
+    .hardware-accelerated {
+      /* 在移动设备上降低硬件加速的复杂度 */
+      transform: translate3d(0, 0, 0);
+    }
+    
+    /* 减少移动端动画复杂度 */
+    .page-nav-button, .pagination-button, .option-label {
+      transition-duration: 0.2s;
+    }
+  }
+  
+  /* 优化问题列表显示性能 */
+  .questions-list-container {
+    contain: content;
+  }
+  
+  .question-item, .re-question {
+    contain: layout style;
+  }
+  

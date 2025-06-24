@@ -187,5 +187,177 @@
         }
       }
     </script>
+
+    <script>
+      // 优化的PDF导出函数
+      function makeMpdf(pdfName) {
+        if (!confirm("您确认下载该PDF文件吗?")) {
+          return; // 用户取消，立即返回
+        }
+        
+        // 显示加载指示器
+        var loadingIndicator = document.createElement('div');
+        loadingIndicator.id = 'pdf-loading';
+        loadingIndicator.innerHTML = '<div class="spinner"></div><p>正在生成PDF，请稍候...</p>';
+        loadingIndicator.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:flex; flex-direction:column; justify-content:center; align-items:center; color:#fff; z-index:9999;';
+        document.body.appendChild(loadingIndicator);
+        
+        // 使用setTimeout让浏览器有时间显示加载指示器
+        setTimeout(function() {
+          try {
+            // 只转换结果容器，而不是整个body，提高性能
+            var target = document.getElementById('results-container');
+            if (!target) {
+              throw new Error("找不到结果容器，无法生成PDF");
+            }
+            
+            // 存储原始样式
+            var originalStyles = {
+              background: target.style.background,
+              margin: target.style.margin,
+              padding: target.style.padding,
+              width: target.style.width
+            };
+            
+            // 优化PDF输出的样式
+            target.style.background = "#FFFFFF";
+            target.style.margin = "20px";
+            target.style.padding = "20px";
+            target.style.width = "800px"; // 固定宽度以优化PDF布局
+            
+            // 生成文件名
+            if (!pdfName || pdfName == "11111.pdf") {
+              pdfName = getNowFormatDate();
+            }
+            
+            // 优化canvas设置
+            var canvasOptions = {
+              allowTaint: true,
+              useCORS: true,
+              scale: 2, // 提高分辨率
+              logging: false, // 禁用日志减少控制台输出
+              backgroundColor: '#FFFFFF', // 确保白色背景
+              removeContainer: true, // 删除临时创建的DOM元素
+              imageTimeout: 15000, // 增加图像超时时间
+              onclone: function(clonedDoc) {
+                // 在克隆的文档中优化表格样式
+                var tables = clonedDoc.querySelectorAll('table');
+                tables.forEach(function(table) {
+                  table.style.width = '100%';
+                  table.style.borderCollapse = 'collapse';
+                });
+              }
+            };
+            
+            // 使用Promise进行异步处理
+            html2canvas(target, canvasOptions)
+              .then(function(canvas) {
+                var contentWidth = canvas.width;
+                var contentHeight = canvas.height;
+                
+                // PDF页面设置
+                var pageHeight = (contentWidth / 592.28) * 841.89;
+                var leftHeight = contentHeight;
+                var position = 0;
+                var imgWidth = 595.28;
+                var imgHeight = (592.28 / contentWidth) * contentHeight;
+                
+                // 优化图像质量和大小
+                var pageData = canvas.toDataURL("image/jpeg", 0.92);
+                
+                var pdf = new jsPDF("", "pt", "a4");
+                
+                // 添加文件信息
+                pdf.setProperties({
+                  title: '明尼苏达多项人格测验结果',
+                  subject: 'MMPI-2测试结果',
+                  author: 'JuneOver24',
+                  keywords: 'MMPI, 心理测试, 人格测验',
+                  creator: 'MMPI在线测试系统'
+                });
+                
+                // 生成PDF页面
+                if (leftHeight < pageHeight) {
+                  // 单页
+                  pdf.addImage(pageData, "JPEG", 0, 0, imgWidth, imgHeight);
+                } else {
+                  // 多页，使用批处理避免过多重绘
+                  var pageCount = Math.ceil(leftHeight / pageHeight);
+                  var processPages = function(currentPage) {
+                    if (currentPage >= pageCount) {
+                      // 所有页面处理完毕，保存PDF
+                      pdf.save(pdfName + ".pdf");
+                      
+                      // 移除加载指示器
+                      document.body.removeChild(loadingIndicator);
+                      
+                      // 恢复原始样式
+                      Object.keys(originalStyles).forEach(function(key) {
+                        target.style[key] = originalStyles[key];
+                      });
+                      
+                      // 提示用户
+                      alert("PDF文件已生成，请将此文件发送至gushao@gushao.club获取专业分析结果。");
+                      return;
+                    }
+                    
+                    // 添加当前页面
+                    if (currentPage > 0) {
+                      pdf.addPage();
+                    }
+                    
+                    var currentPosition = position - (currentPage * pageHeight);
+                    pdf.addImage(pageData, "JPEG", 0, currentPosition, imgWidth, imgHeight);
+                    
+                    // 处理下一页
+                    setTimeout(function() {
+                      processPages(currentPage + 1);
+                    }, 0);
+                  };
+                  
+                  // 开始处理页面
+                  processPages(0);
+                  return; // 提前返回，异步处理剩余页面
+                }
+                
+                // 单页情况直接保存
+                pdf.save(pdfName + ".pdf");
+                
+                // 移除加载指示器
+                document.body.removeChild(loadingIndicator);
+                
+                // 恢复原始样式
+                Object.keys(originalStyles).forEach(function(key) {
+                  target.style[key] = originalStyles[key];
+                });
+                
+                // 提示用户
+                alert("PDF文件已生成，请将此文件发送至gushao@gushao.club获取专业分析结果。");
+              })
+              .catch(function(error) {
+                console.error("生成PDF时出错：", error);
+                alert("生成PDF时出错：" + error.message);
+                
+                // 移除加载指示器
+                document.body.removeChild(loadingIndicator);
+                
+                // 恢复原始样式
+                Object.keys(originalStyles).forEach(function(key) {
+                  target.style[key] = originalStyles[key];
+                });
+              });
+          } catch (error) {
+            console.error("导出PDF过程中出错：", error);
+            alert("导出PDF时发生错误：" + error.message);
+            
+            // 移除加载指示器
+            var loadingElement = document.getElementById('pdf-loading');
+            if (loadingElement) {
+              document.body.removeChild(loadingElement);
+            }
+          }
+        }, 100);
+      }
+    </script>
   </body>
 </html>
