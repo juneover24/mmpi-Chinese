@@ -345,6 +345,8 @@ function doc_write_all_questions() {
           isReQuestion: true
         });
       }
+      
+      console.log("RE量表问题加载完成，总数：", window.allQuestions.length);
     } else {
       console.error("无法找到RE量表索引");
       var errorMsg = document.createElement('p');
@@ -366,6 +368,8 @@ function doc_write_all_questions() {
         console.error("找不到题目文本：", i);
       }
     }
+    
+    console.log("普通问题加载完成，总数：", window.allQuestions.length);
   }
   
   // 设置当前题目索引
@@ -471,21 +475,28 @@ function updateQuestionNavigation() {
   var isLastQuestion = window.currentQuestionIndex === window.allQuestions.length - 1;
   nextButton.textContent = isLastQuestion ? '跳过并完成' : '跳过';
   
-  // 提交按钮
-  submitButton.style.display = isLastQuestion ? 'inline-block' : 'none';
-  
   // 检查是否所有题目都已回答
   var allAnswered = true;
+  var answeredCount = 0;
   for (var i = 0; i < window.allQuestions.length; i++) {
     var qId = window.allQuestions[i].id;
-    if (!ans[qId] || ans[qId] === '?') {
+    if (ans[qId] && ans[qId] !== '?') {
+      answeredCount++;
+    } else {
       allAnswered = false;
-      break;
     }
   }
   
+  // 提交按钮显示逻辑：如果是最后一题，或者所有题目都已回答，则显示提交按钮
+  var shouldShowSubmit = isLastQuestion || allAnswered;
+  submitButton.style.display = shouldShowSubmit ? 'inline-block' : 'none';
+  
   submitButton.disabled = !allAnswered;
   submitButton.className = allAnswered ? 'submit-button ready' : 'submit-button';
+  
+  // 调试信息
+  console.log("导航更新 - 当前题目:", window.currentQuestionIndex + 1, "/", window.allQuestions.length, 
+              "已回答:", answeredCount, "全部回答:", allAnswered, "显示提交:", shouldShowSubmit);
 }
 
 // 更新问题进度
@@ -575,8 +586,25 @@ function setupSingleQuestionEventDelegation() {
         // 更新进度
         updateQuestionProgress();
         
-        // 如果不是最后一题，自动前进到下一题
-        if (window.currentQuestionIndex < window.allQuestions.length - 1) {
+        // 检查是否所有题目都已回答
+        var allAnswered = true;
+        for (var i = 0; i < window.allQuestions.length; i++) {
+          var qId = window.allQuestions[i].id;
+          if (!ans[qId] || ans[qId] === '?') {
+            allAnswered = false;
+            break;
+          }
+        }
+        
+        // 如果所有题目都已回答，跳转到最后一题以显示提交按钮
+        if (allAnswered && window.currentQuestionIndex < window.allQuestions.length - 1) {
+          setTimeout(function() {
+            window.currentQuestionIndex = window.allQuestions.length - 1;
+            showCurrentQuestion();
+            updateQuestionNavigation();
+          }, 300);
+        } else if (!allAnswered && window.currentQuestionIndex < window.allQuestions.length - 1) {
+          // 如果不是最后一题且还有未回答的题目，自动前进到下一题
           setTimeout(function() {
             navigateQuestion(1);
           }, 300);
