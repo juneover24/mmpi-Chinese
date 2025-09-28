@@ -46,6 +46,7 @@ function make_table() {
 
 longform = true; // All questions or first 370
 gender = 0; // 0==male, 1==female
+age = null; // User's age
 ans = []; // Answers to questions: [T,F,?]
 re_scale_only = false; // 是否只测试RE量表
 
@@ -1390,6 +1391,13 @@ function exportCSVResults() {
     
     setTimeout(function() {
       try {
+        // 准备基本信息CSV
+        var basicInfoCSV = "测试信息\n";
+        basicInfoCSV += "测试时间," + new Date().toISOString() + "\n";
+        basicInfoCSV += "测试类型," + (longform ? "完整测试" : (re_scale_only ? "社会责任感测试" : "简短测试")) + "\n";
+        basicInfoCSV += "年龄," + (age || "未设置") + "\n";
+        basicInfoCSV += "性别," + (gender === 0 ? "男性" : "女性") + "\n\n";
+        
         // 准备量表结果CSV
         var scaleResultsCSV = "量表代码,量表名称,原始分,K校正分,T分,回答百分比\n";
         
@@ -1504,9 +1512,10 @@ function exportCSVResults() {
         }
         
         // 合并所有CSV数据
-        var csvData = "# MMPI测试结果 - " + (gender === 0 ? "男性" : "女性") + " - " + 
+        var csvData = "# MMPI测试结果 - " + (age || "未设置") + "岁 - " + (gender === 0 ? "男性" : "女性") + " - " + 
                       (longform ? "完整测试" : (re_scale_only ? "社会责任感测试" : "简短测试")) + "\n" +
                       "# 导出时间: " + new Date().toLocaleString() + "\n\n" +
+                      "## 基本信息\n" + basicInfoCSV +
                       "## 量表结果\n" + scaleResultsCSV + "\n" +
                       "## 答案\n" + answersCSV + "\n" +
                       "## 关键项目\n" + criticalItemsCSV;
@@ -2024,6 +2033,11 @@ function set_gender(g) {
   gender = g;
 }
 
+// Set the age
+function set_age(a) {
+  age = a;
+}
+
 // 监听表单变化以更新进度条
 function setupProgressMonitoring() {
   // 添加事件委托，监听整个表单内的radio变化
@@ -2057,6 +2071,7 @@ function exportTestResults() {
         var testData = {
           timestamp: new Date().toISOString(),
           testType: longform ? "完整测试" : (re_scale_only ? "社会责任感测试" : "简短测试"),
+          age: age || "未设置",
           gender: gender === 0 ? "男性" : "女性",
           answers: []
         };

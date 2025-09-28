@@ -186,6 +186,7 @@
     function selectAge(age) {
       if (age >= 16 && age <= 100) {
         selectedAge = age;
+        set_age(age);
         document.getElementById('selected-age').textContent = "年龄：" + age + "岁";
         document.getElementById('next-step').disabled = false;
         updateAge(age);
