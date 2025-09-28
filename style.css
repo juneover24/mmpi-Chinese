@@ -1197,18 +1197,26 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 25px;
     padding: 30px 20px;
-    max-width: 400px;
+    max-width: 450px;
     margin: 0 auto;
   }
   
   .age-display {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: center;
-    gap: 5px;
+    gap: 20px;
     margin-bottom: 10px;
+  }
+  
+  .age-value-container {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    min-width: 120px;
+    justify-content: center;
   }
   
   #age-value {
@@ -1225,7 +1233,65 @@
     color: var(--light-text);
     margin-left: 5px;
   }
+
+  .age-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid var(--primary-color);
+    background: white;
+    color: var(--primary-color);
+    font-size: 24px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .age-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+
+  .age-btn:active {
+    transform: translateY(0);
+  }
   
+  .slider-wrapper {
+    position: relative;
+    width: 100%;
+    cursor: pointer;
+  }
+
+  .slider-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 25px;
+    border: 2px dashed var(--primary-light);
+    font-size: 14px;
+    color: var(--primary-color);
+    font-weight: 600;
+    z-index: 2;
+    transition: var(--transition);
+  }
+
+  .slider-overlay:hover {
+    background: rgba(90, 103, 216, 0.1);
+    border-color: var(--primary-color);
+  }
+
   #age-slider {
     width: 100%;
     height: 8px;
@@ -1236,6 +1302,15 @@
     appearance: none;
     cursor: pointer;
     transition: var(--transition);
+    opacity: 0.5;
+  }
+
+  #age-slider:not(:disabled) {
+    opacity: 1;
+    background: linear-gradient(to right, 
+      var(--primary-light) 0%, 
+      var(--primary-color) 50%, 
+      var(--primary-dark) 100%);
   }
   
   /* WebKit 浏览器滑动条样式 */
@@ -1302,6 +1377,40 @@
     margin-top: 5px;
   }
 
+  .age-quick-select {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 15px;
+  }
+
+  .quick-age-btn {
+    padding: 8px 16px;
+    border: 2px solid var(--primary-light);
+    background: white;
+    color: var(--primary-color);
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    min-width: 45px;
+  }
+
+  .quick-age-btn:hover {
+    background: var(--primary-light);
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  .quick-age-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow);
+  }
+
   /* 移动端适配 */
   @media (max-width: 768px) {
     .single-question-container {
@@ -1338,6 +1447,16 @@
       font-size: 20px;
     }
     
+    .age-btn {
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+    }
+    
+    .age-display {
+      gap: 15px;
+    }
+    
     #age-slider::-webkit-slider-thumb {
       width: 20px;
       height: 20px;
@@ -1346,6 +1465,16 @@
     #age-slider::-moz-range-thumb {
       width: 20px;
       height: 20px;
+    }
+    
+    .quick-age-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+      min-width: 35px;
+    }
+    
+    .age-quick-select {
+      gap: 8px;
     }
   }
   

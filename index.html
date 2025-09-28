@@ -47,14 +47,30 @@
         <div class="config-options step-options">
           <div class="age-slider-container">
             <div class="age-display">
-              <span id="age-value">25</span>
-              <span class="age-unit">岁</span>
+              <button class="age-btn age-decrease" onclick="adjustAge(-1)">-</button>
+              <div class="age-value-container">
+                <span id="age-value">25</span>
+                <span class="age-unit">岁</span>
+              </div>
+              <button class="age-btn age-increase" onclick="adjustAge(1)">+</button>
             </div>
-            <input type="range" id="age-slider" min="16" max="100" value="25" oninput="updateAge(this.value);"
-              onchange="selectAge(this.value);" />
+            <div class="slider-wrapper" onclick="activateSlider()">
+              <input type="range" id="age-slider" min="16" max="100" value="25" oninput="updateAge(this.value);"
+                onchange="selectAge(this.value);" onblur="deactivateSlider()" disabled />
+              <div class="slider-overlay" id="slider-overlay">
+                <span>点击激活滑动条</span>
+              </div>
+            </div>
             <div class="age-range-labels">
               <span>16岁</span>
               <span>100岁</span>
+            </div>
+            <div class="age-quick-select">
+              <button class="quick-age-btn" onclick="setQuickAge(18)">18</button>
+              <button class="quick-age-btn" onclick="setQuickAge(25)">25</button>
+              <button class="quick-age-btn" onclick="setQuickAge(30)">30</button>
+              <button class="quick-age-btn" onclick="setQuickAge(40)">40</button>
+              <button class="quick-age-btn" onclick="setQuickAge(50)">50</button>
             </div>
           </div>
         </div>
@@ -163,6 +179,7 @@
     // 更新年龄显示
     function updateAge(age) {
       document.getElementById('age-value').textContent = age;
+      updateQuickSelectButtons(age);
     }
 
     // 选择年龄
@@ -171,11 +188,60 @@
         selectedAge = age;
         document.getElementById('selected-age').textContent = "年龄：" + age + "岁";
         document.getElementById('next-step').disabled = false;
+        updateAge(age);
       } else {
         selectedAge = null;
         document.getElementById('selected-age').textContent = "年龄：未选择";
         document.getElementById('next-step').disabled = true;
       }
+    }
+
+    // 调整年龄（+1或-1）
+    function adjustAge(delta) {
+      var slider = document.getElementById('age-slider');
+      var newAge = parseInt(slider.value) + delta;
+      if (newAge >= 16 && newAge <= 100) {
+        slider.value = newAge;
+        selectAge(newAge);
+      }
+    }
+
+    // 激活滑动条
+    function activateSlider() {
+      var slider = document.getElementById('age-slider');
+      var overlay = document.getElementById('slider-overlay');
+      slider.disabled = false;
+      overlay.style.display = 'none';
+      slider.focus();
+    }
+
+    // 停用滑动条
+    function deactivateSlider() {
+      var slider = document.getElementById('age-slider');
+      var overlay = document.getElementById('slider-overlay');
+      setTimeout(function () {
+        slider.disabled = true;
+        overlay.style.display = 'flex';
+      }, 100);
+    }
+
+    // 快速选择年龄
+    function setQuickAge(age) {
+      var slider = document.getElementById('age-slider');
+      slider.value = age;
+      selectAge(age);
+    }
+
+    // 更新快速选择按钮状态
+    function updateQuickSelectButtons(currentAge) {
+      var buttons = document.querySelectorAll('.quick-age-btn');
+      buttons.forEach(function (btn) {
+        if (parseInt(btn.textContent) === parseInt(currentAge)) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
     }
 
     // 选择性别
