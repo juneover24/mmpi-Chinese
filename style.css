@@ -1192,45 +1192,114 @@
     transform: translateY(-2px);
   }
   
-  /* 年龄输入框样式 */
-  .age-input-container {
+  /* 年龄滑动条样式 */
+  .age-slider-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 15px;
-    padding: 20px;
+    gap: 20px;
+    padding: 30px 20px;
+    max-width: 400px;
+    margin: 0 auto;
   }
   
-  #age-input {
-    width: 200px;
-    padding: 15px 20px;
-    border: 2px solid #e2e8f0;
-    border-radius: 50px;
-    font-size: 18px;
-    text-align: center;
-    font-weight: 600;
-    color: var(--text-color);
-    background: white;
+  .age-display {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 5px;
+    margin-bottom: 10px;
+  }
+  
+  #age-value {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-shadow: 0 2px 4px rgba(90, 103, 216, 0.2);
     transition: var(--transition);
-    box-shadow: var(--shadow-sm);
   }
   
-  #age-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(90, 103, 216, 0.1);
-    transform: translateY(-2px);
-  }
-  
-  #age-input:hover {
-    border-color: var(--primary-light);
-    transform: translateY(-1px);
-  }
-  
-  .age-input-container small {
+  .age-unit {
+    font-size: 24px;
+    font-weight: 600;
     color: var(--light-text);
+    margin-left: 5px;
+  }
+  
+  #age-slider {
+    width: 100%;
+    height: 8px;
+    border-radius: 50px;
+    background: linear-gradient(to right, #e2e8f0, #e2e8f0);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  
+  /* WebKit 浏览器滑动条样式 */
+  #age-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(90, 103, 216, 0.3);
+    transition: var(--transition);
+    border: 3px solid white;
+  }
+  
+  #age-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 6px 20px rgba(90, 103, 216, 0.4);
+  }
+  
+  #age-slider::-webkit-slider-thumb:active {
+    transform: scale(1.1);
+  }
+  
+  /* Firefox 浏览器滑动条样式 */
+  #age-slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(90, 103, 216, 0.3);
+    border: 3px solid white;
+    transition: var(--transition);
+  }
+  
+  #age-slider::-moz-range-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 6px 20px rgba(90, 103, 216, 0.4);
+  }
+  
+  #age-slider::-moz-range-track {
+    height: 8px;
+    border-radius: 50px;
+    background: #e2e8f0;
+  }
+  
+  /* 滑动条轨道渐变效果 */
+  #age-slider {
+    background: linear-gradient(to right, 
+      var(--primary-light) 0%, 
+      var(--primary-color) 50%, 
+      var(--primary-dark) 100%);
+  }
+  
+  .age-range-labels {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
     font-size: 14px;
+    color: var(--light-text);
     font-weight: 500;
+    margin-top: 5px;
   }
 
   /* 移动端适配 */
@@ -1256,9 +1325,27 @@
       margin-top: 10px;
     }
     
-    #age-input {
-      width: 100%;
-      max-width: 250px;
+    .age-slider-container {
+      padding: 20px 15px;
+      max-width: 100%;
+    }
+    
+    #age-value {
+      font-size: 36px;
+    }
+    
+    .age-unit {
+      font-size: 20px;
+    }
+    
+    #age-slider::-webkit-slider-thumb {
+      width: 20px;
+      height: 20px;
+    }
+    
+    #age-slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
     }
   }
   

@@ -41,14 +41,21 @@
         </div>
       </div>
 
-      <!-- 步骤1：年龄输入 -->
+      <!-- 步骤1：年龄选择 -->
       <div class="step-content" id="step-1">
-        <h2>请输入您的年龄</h2>
+        <h2>请选择您的年龄</h2>
         <div class="config-options step-options">
-          <div class="age-input-container">
-            <input type="number" id="age-input" min="16" max="100" placeholder="请输入年龄"
+          <div class="age-slider-container">
+            <div class="age-display">
+              <span id="age-value">25</span>
+              <span class="age-unit">岁</span>
+            </div>
+            <input type="range" id="age-slider" min="16" max="100" value="25" oninput="updateAge(this.value);"
               onchange="selectAge(this.value);" />
-            <small>年龄范围：16-100岁</small>
+            <div class="age-range-labels">
+              <span>16岁</span>
+              <span>100岁</span>
+            </div>
           </div>
         </div>
       </div>
@@ -106,7 +113,7 @@
 
           <div class="selected-options">
             <p>您选择的配置：</p>
-            <p id="selected-age">年龄：未输入</p>
+            <p id="selected-age">年龄：25岁</p>
             <p id="selected-gender">性别：未选择</p>
             <p id="selected-test-type">测试类型：未选择</p>
           </div>
@@ -153,6 +160,11 @@
     var selectedGender = null;
     var selectedTestType = null;
 
+    // 更新年龄显示
+    function updateAge(age) {
+      document.getElementById('age-value').textContent = age;
+    }
+
     // 选择年龄
     function selectAge(age) {
       if (age >= 16 && age <= 100) {
@@ -161,7 +173,7 @@
         document.getElementById('next-step').disabled = false;
       } else {
         selectedAge = null;
-        document.getElementById('selected-age').textContent = "年龄：未输入";
+        document.getElementById('selected-age').textContent = "年龄：未选择";
         document.getElementById('next-step').disabled = true;
       }
     }
@@ -256,6 +268,12 @@
       // 初始化ans数组
       var maxQuestions = 600; // 足够大的数组以容纳所有可能的问题
       window.ans = new Array(maxQuestions).fill(undefined);
+
+      // 初始化年龄滑动条
+      var ageSlider = document.getElementById('age-slider');
+      if (ageSlider) {
+        selectAge(ageSlider.value); // 设置默认年龄
+      }
     });
   </script>
 </body>
