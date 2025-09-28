@@ -1,224 +1,263 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MMPI-2 明尼苏达多项人格测验</title>
-    <link rel="stylesheet" href="./style.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="./jquery-3.6.3.min.js"></script>
-    <script src="./html2canvas.min.js"></script>
-    <script src="./jspdf.min.js"></script>
-    <script type="text/javascript" src="./data.js"></script>
-    <script type="text/javascript" src="./script.js"></script>
-  </head>
-  <body>
-    <div class="container">
-      <h1 id="test-title">MMPI-2 明尼苏达多项人格测验</h1>
-      <p class="subtitle">探索您的性格特质，了解自己的心理状态</p>
 
-      <!-- 分步骤配置面板 -->
-      <div class="config-panel">
-        <!-- 步骤指示器 -->
-        <div class="step-indicator">
-          <div class="step active" data-step="1">
-            <div class="step-number">1</div>
-            <div class="step-text">性别</div>
-          </div>
-          <div class="step" data-step="2">
-            <div class="step-number">2</div>
-            <div class="step-text">测试类型</div>
-          </div>
-          <div class="step" data-step="3">
-            <div class="step-number">3</div>
-            <div class="step-text">开始测试</div>
-          </div>
-        </div>
-        
-        <!-- 步骤1：性别选择 -->
-        <div class="step-content" id="step-1">
-          <h2>选择您的性别</h2>
-          <div class="config-options step-options">
-            <label class="config-option step-option">
-              <input type="radio" name="gender" value="M" onclick="selectGender(0);" />
-                  <span>男性</span>
-                </label>
-            <label class="config-option step-option">
-              <input type="radio" name="gender" value="F" onclick="selectGender(1);" />
-                  <span>女性</span>
-                </label>
-              </div>
-            </div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MMPI-2 明尼苏达多项人格测验</title>
+  <link rel="stylesheet" href="./style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="./jquery-3.6.3.min.js"></script>
+  <script src="./html2canvas.min.js"></script>
+  <script src="./jspdf.min.js"></script>
+  <script type="text/javascript" src="./data.js"></script>
+  <script type="text/javascript" src="./script.js"></script>
+</head>
 
-        <!-- 步骤2：测试类型选择 -->
-        <div class="step-content" id="step-2" style="display: none;">
-          <h2>选择测试类型</h2>
-          <div class="config-options step-options">
-            <label class="config-option step-option">
-              <input type="radio" name="testform" value="L" onclick="selectTestType('long');" />
-                  <span>完整测试</span>
-                  <small>(包含所有问题，结果更准确)</small>
-                </label>
-            <label class="config-option step-option">
-              <input type="radio" name="testform" value="S" onclick="selectTestType('short');" />
-                  <span>简短测试</span>
-                  <small>(只包含前370个问题)</small>
-                </label>
-            <label class="config-option step-option">
-              <input type="radio" name="testform" value="RE" onclick="selectTestType('re');" />
-                  <span>社会责任感测试</span>
-                  <small>(仅RE量表)</small>
-                </label>
-            </div>
-          </div>
-          
-        <!-- 步骤3：测试说明 -->
-        <div class="step-content" id="step-3" style="display: none;">
-          <h2>测试说明</h2>
-          <div class="test-instructions">
-            <p>本测验将一次只显示一道题目，请根据您的真实情况回答。回答没有对错之分，请选择最符合您自身情况的选项。</p>
-            <p>每道题目有三个选项：</p>
-            <ul>
-              <li><strong>是</strong> - 表示同意或符合描述</li>
-              <li><strong>否</strong> - 表示不同意或不符合描述</li>
-              <li><strong>无法确定</strong> - 表示无法判断</li>
-            </ul>
-            <p>当您选择答案后，系统会自动跳转到下一题。您也可以使用导航按钮手动切换题目。</p>
-            <p>测试完成后，系统将自动生成测试报告。</p>
-            
-            <div class="selected-options">
-              <p>您选择的配置：</p>
-              <p id="selected-gender">性别：未选择</p>
-              <p id="selected-test-type">测试类型：未选择</p>
-            </div>
-          </div>
-          
-          <div class="start-button-container">
-            <button type="button" onclick="startTest();" class="start-button">开始测试</button>
-          </div>
+<body>
+  <div class="container">
+    <h1 id="test-title">MMPI-2 明尼苏达多项人格测验</h1>
+    <p class="subtitle">探索您的性格特质，了解自己的心理状态</p>
+
+    <!-- 分步骤配置面板 -->
+    <div class="config-panel">
+      <!-- 步骤指示器 -->
+      <div class="step-indicator">
+        <div class="step active" data-step="1">
+          <div class="step-number">1</div>
+          <div class="step-text">年龄</div>
         </div>
-        
-        <!-- 步骤导航按钮 -->
-        <div class="step-navigation">
-          <button type="button" id="prev-step" onclick="navigateStep(-1);" style="display: none;">上一步</button>
-          <button type="button" id="next-step" onclick="navigateStep(1);" disabled>下一步</button>
+        <div class="step" data-step="2">
+          <div class="step-number">2</div>
+          <div class="step-text">性别</div>
+        </div>
+        <div class="step" data-step="3">
+          <div class="step-number">3</div>
+          <div class="step-text">测试类型</div>
+        </div>
+        <div class="step" data-step="4">
+          <div class="step-number">4</div>
+          <div class="step-text">开始测试</div>
         </div>
       </div>
 
-      <!-- 问题容器 -->
-      <div id="questions-container" style="display: none;">
-        <form name="questions" action="#" onsubmit="return false;">
-          <div id="questions-content">
-            <!-- 问题内容将由JavaScript动态生成 -->
+      <!-- 步骤1：年龄输入 -->
+      <div class="step-content" id="step-1">
+        <h2>请输入您的年龄</h2>
+        <div class="config-options step-options">
+          <div class="age-input-container">
+            <input type="number" id="age-input" min="16" max="100" placeholder="请输入年龄"
+              onchange="selectAge(this.value);" />
+            <small>年龄范围：16-100岁</small>
           </div>
-        </form>
+        </div>
       </div>
 
-      <!-- 结果容器 -->
-      <div id="results-container" style="display: none;">
-        <h2>测试结果</h2>
-        <div id="results-content"></div>
+      <!-- 步骤2：性别选择 -->
+      <div class="step-content" id="step-2" style="display: none;">
+        <h2>选择您的性别</h2>
+        <div class="config-options step-options">
+          <label class="config-option step-option">
+            <input type="radio" name="gender" value="M" onclick="selectGender(0);" />
+            <span>男性</span>
+          </label>
+          <label class="config-option step-option">
+            <input type="radio" name="gender" value="F" onclick="selectGender(1);" />
+            <span>女性</span>
+          </label>
+        </div>
       </div>
 
-      <!-- 页脚 -->
-      <div class="footer">
-        <p>© 2024 MMPI在线测试系统 | 由 <a href="#">JuneOver24</a> 强力驱动</p>
+      <!-- 步骤3：测试类型选择 -->
+      <div class="step-content" id="step-3" style="display: none;">
+        <h2>选择测试类型</h2>
+        <div class="config-options step-options">
+          <label class="config-option step-option">
+            <input type="radio" name="testform" value="L" onclick="selectTestType('long');" />
+            <span>完整测试</span>
+            <small>(包含所有问题，结果更准确)</small>
+          </label>
+          <label class="config-option step-option">
+            <input type="radio" name="testform" value="S" onclick="selectTestType('short');" />
+            <span>简短测试</span>
+            <small>(只包含前370个问题)</small>
+          </label>
+          <label class="config-option step-option">
+            <input type="radio" name="testform" value="RE" onclick="selectTestType('re');" />
+            <span>社会责任感测试</span>
+            <small>(仅RE量表)</small>
+          </label>
+        </div>
+      </div>
+
+      <!-- 步骤4：测试说明 -->
+      <div class="step-content" id="step-4" style="display: none;">
+        <h2>测试说明</h2>
+        <div class="test-instructions">
+          <p>本测验将一次只显示一道题目，请根据您的真实情况回答。回答没有对错之分，请选择最符合您自身情况的选项。</p>
+          <p>每道题目有三个选项：</p>
+          <ul>
+            <li><strong>是</strong> - 表示同意或符合描述</li>
+            <li><strong>否</strong> - 表示不同意或不符合描述</li>
+            <li><strong>无法确定</strong> - 表示无法判断</li>
+          </ul>
+          <p>当您选择答案后，系统会自动跳转到下一题。您也可以使用导航按钮手动切换题目。</p>
+          <p>测试完成后，系统将自动生成测试报告。</p>
+
+          <div class="selected-options">
+            <p>您选择的配置：</p>
+            <p id="selected-age">年龄：未输入</p>
+            <p id="selected-gender">性别：未选择</p>
+            <p id="selected-test-type">测试类型：未选择</p>
+          </div>
+        </div>
+
+        <div class="start-button-container">
+          <button type="button" onclick="startTest();" class="start-button">开始测试</button>
+        </div>
+      </div>
+
+      <!-- 步骤导航按钮 -->
+      <div class="step-navigation">
+        <button type="button" id="prev-step" onclick="navigateStep(-1);" style="display: none;">上一步</button>
+        <button type="button" id="next-step" onclick="navigateStep(1);" disabled>下一步</button>
       </div>
     </div>
 
+    <!-- 问题容器 -->
+    <div id="questions-container" style="display: none;">
+      <form name="questions" action="#" onsubmit="return false;">
+        <div id="questions-content">
+          <!-- 问题内容将由JavaScript动态生成 -->
+        </div>
+      </form>
+    </div>
 
-    <script>
-      // 当前步骤
-      var currentStep = 1;
-      var selectedGender = null;
-      var selectedTestType = null;
-      
-      // 选择性别
-      function selectGender(gender) {
-        selectedGender = gender;
-        set_gender(gender);
-        document.getElementById('selected-gender').textContent = "性别：" + (gender === 0 ? "男性" : "女性");
+    <!-- 结果容器 -->
+    <div id="results-container" style="display: none;">
+      <h2>测试结果</h2>
+      <div id="results-content"></div>
+    </div>
+
+    <!-- 页脚 -->
+    <div class="footer">
+      <p>© 2024 MMPI在线测试系统 | 由 <a href="#">JuneOver24</a> 强力驱动</p>
+    </div>
+  </div>
+
+
+  <script>
+    // 当前步骤
+    var currentStep = 1;
+    var selectedAge = null;
+    var selectedGender = null;
+    var selectedTestType = null;
+
+    // 选择年龄
+    function selectAge(age) {
+      if (age >= 16 && age <= 100) {
+        selectedAge = age;
+        document.getElementById('selected-age').textContent = "年龄：" + age + "岁";
         document.getElementById('next-step').disabled = false;
-      }
-      
-      // 选择测试类型
-      function selectTestType(type) {
-        selectedTestType = type;
-        if (type === 'long') {
-          use_long_form(true);
-        } else if (type === 'short') {
-          use_long_form(false);
-        } else if (type === 're') {
-          use_re_scale();
-        }
-        
-        var typeText = type === 'long' ? "完整测试" : (type === 'short' ? "简短测试" : "社会责任感测试");
-        document.getElementById('selected-test-type').textContent = "测试类型：" + typeText;
-        document.getElementById('next-step').disabled = false;
-      }
-      
-      // 导航步骤
-      function navigateStep(direction) {
-        var nextStep = currentStep + direction;
-        
-        // 验证是否可以进入下一步
-        if (direction > 0) {
-          if (currentStep === 1 && selectedGender === null) {
-            alert("请先选择您的性别");
-            return;
-          } else if (currentStep === 2 && selectedTestType === null) {
-            alert("请先选择测试类型");
-            return;
-          }
-        }
-        
-        // 限制步骤范围
-        if (nextStep < 1 || nextStep > 3) return;
-        
-        // 隐藏当前步骤，显示下一步
-        document.getElementById('step-' + currentStep).style.display = 'none';
-        document.getElementById('step-' + nextStep).style.display = 'block';
-        
-        // 更新步骤指示器
-        document.querySelector('.step[data-step="' + currentStep + '"]').classList.remove('active');
-        document.querySelector('.step[data-step="' + nextStep + '"]').classList.add('active');
-        
-        // 更新导航按钮
-        document.getElementById('prev-step').style.display = nextStep > 1 ? 'block' : 'none';
-        document.getElementById('next-step').style.display = nextStep < 3 ? 'block' : 'none';
-        
-        // 如果是最后一步，确保已经选择了所有选项
-        if (nextStep === 3) {
-          document.getElementById('next-step').disabled = (selectedGender === null || selectedTestType === null);
-        } else {
-          // 重置下一步按钮状态
-          if (nextStep === 1) {
-            document.getElementById('next-step').disabled = selectedGender === null;
-          } else if (nextStep === 2) {
-            document.getElementById('next-step').disabled = selectedTestType === null;
-          }
-        }
-        
-        // 更新当前步骤
-        currentStep = nextStep;
-      }
-      
-      // 页面加载后初始化
-      document.addEventListener('DOMContentLoaded', function() {
-        // 初始设置
+      } else {
+        selectedAge = null;
+        document.getElementById('selected-age').textContent = "年龄：未输入";
         document.getElementById('next-step').disabled = true;
-        
-        // 确保数据加载正确
-        if (typeof questions === 'undefined' || typeof scales === 'undefined') {
-          console.error("测试数据未正确加载");
-          alert("测试数据未正确加载，请刷新页面重试。如果问题持续存在，请联系管理员。");
-                      return;
-                    }
-                    
-        // 初始化ans数组
-        var maxQuestions = 600; // 足够大的数组以容纳所有可能的问题
-        window.ans = new Array(maxQuestions).fill(undefined);
-      });
-    </script>
-  </body>
+      }
+    }
+
+    // 选择性别
+    function selectGender(gender) {
+      selectedGender = gender;
+      set_gender(gender);
+      document.getElementById('selected-gender').textContent = "性别：" + (gender === 0 ? "男性" : "女性");
+      document.getElementById('next-step').disabled = false;
+    }
+
+    // 选择测试类型
+    function selectTestType(type) {
+      selectedTestType = type;
+      if (type === 'long') {
+        use_long_form(true);
+      } else if (type === 'short') {
+        use_long_form(false);
+      } else if (type === 're') {
+        use_re_scale();
+      }
+
+      var typeText = type === 'long' ? "完整测试" : (type === 'short' ? "简短测试" : "社会责任感测试");
+      document.getElementById('selected-test-type').textContent = "测试类型：" + typeText;
+      document.getElementById('next-step').disabled = false;
+    }
+
+    // 导航步骤
+    function navigateStep(direction) {
+      var nextStep = currentStep + direction;
+
+      // 验证是否可以进入下一步
+      if (direction > 0) {
+        if (currentStep === 1 && selectedAge === null) {
+          alert("请先输入您的年龄");
+          return;
+        } else if (currentStep === 2 && selectedGender === null) {
+          alert("请先选择您的性别");
+          return;
+        } else if (currentStep === 3 && selectedTestType === null) {
+          alert("请先选择测试类型");
+          return;
+        }
+      }
+
+      // 限制步骤范围
+      if (nextStep < 1 || nextStep > 4) return;
+
+      // 隐藏当前步骤，显示下一步
+      document.getElementById('step-' + currentStep).style.display = 'none';
+      document.getElementById('step-' + nextStep).style.display = 'block';
+
+      // 更新步骤指示器
+      document.querySelector('.step[data-step="' + currentStep + '"]').classList.remove('active');
+      document.querySelector('.step[data-step="' + nextStep + '"]').classList.add('active');
+
+      // 更新导航按钮
+      document.getElementById('prev-step').style.display = nextStep > 1 ? 'block' : 'none';
+      document.getElementById('next-step').style.display = nextStep < 4 ? 'block' : 'none';
+
+      // 如果是最后一步，确保已经选择了所有选项
+      if (nextStep === 4) {
+        document.getElementById('next-step').disabled = (selectedAge === null || selectedGender === null || selectedTestType === null);
+      } else {
+        // 重置下一步按钮状态
+        if (nextStep === 1) {
+          document.getElementById('next-step').disabled = selectedAge === null;
+        } else if (nextStep === 2) {
+          document.getElementById('next-step').disabled = selectedGender === null;
+        } else if (nextStep === 3) {
+          document.getElementById('next-step').disabled = selectedTestType === null;
+        }
+      }
+
+      // 更新当前步骤
+      currentStep = nextStep;
+    }
+
+    // 页面加载后初始化
+    document.addEventListener('DOMContentLoaded', function () {
+      // 初始设置
+      document.getElementById('next-step').disabled = true;
+
+      // 确保数据加载正确
+      if (typeof questions === 'undefined' || typeof scales === 'undefined') {
+        console.error("测试数据未正确加载");
+        alert("测试数据未正确加载，请刷新页面重试。如果问题持续存在，请联系管理员。");
+        return;
+      }
+
+      // 初始化ans数组
+      var maxQuestions = 600; // 足够大的数组以容纳所有可能的问题
+      window.ans = new Array(maxQuestions).fill(undefined);
+    });
+  </script>
+</body>
+
 </html>

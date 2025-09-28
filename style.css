@@ -1192,6 +1192,47 @@
     transform: translateY(-2px);
   }
   
+  /* 年龄输入框样式 */
+  .age-input-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+  }
+  
+  #age-input {
+    width: 200px;
+    padding: 15px 20px;
+    border: 2px solid #e2e8f0;
+    border-radius: 50px;
+    font-size: 18px;
+    text-align: center;
+    font-weight: 600;
+    color: var(--text-color);
+    background: white;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  #age-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(90, 103, 216, 0.1);
+    transform: translateY(-2px);
+  }
+  
+  #age-input:hover {
+    border-color: var(--primary-light);
+    transform: translateY(-1px);
+  }
+  
+  .age-input-container small {
+    color: var(--light-text);
+    font-size: 14px;
+    font-weight: 500;
+  }
+
   /* 移动端适配 */
   @media (max-width: 768px) {
     .single-question-container {
@@ -1213,6 +1254,11 @@
       order: 3;
       width: 100%;
       margin-top: 10px;
+    }
+    
+    #age-input {
+      width: 100%;
+      max-width: 250px;
     }
   }
   
